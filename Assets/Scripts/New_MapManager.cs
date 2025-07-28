@@ -20,7 +20,7 @@ public class New_MapManager : MonoBehaviour
     public New_TempCell cellPrefab;
     private float cellSize;
     private Queue<Vector2Int> cellQueue;
-    private List<New_TempCell> spawnedCells;
+    private List<Node> spawnedNodes;
 
     private Graph nodeGraph;
 
@@ -37,7 +37,7 @@ public class New_MapManager : MonoBehaviour
         maxNodes = 24;
 
         cellSize = 0.5f;
-        spawnedCells = new List<New_TempCell>();
+        spawnedNodes = new List<Node>();
 
         nodeGraph = new Graph(0, new Vector2Int(initialCellX, initialCellY));
 
@@ -56,13 +56,13 @@ public class New_MapManager : MonoBehaviour
 
     void SetupMap()
     {
-        for (int i = 0; i < spawnedCells.Count; i++)
+        for (int i = 0; i < spawnedNodes.Count; i++)
         {
-            Destroy(spawnedCells[i].gameObject);
+            Destroy(spawnedNodes[i].directionalRoomPrefab);
         }
 
         nodeGraph.ClearGraph();
-        spawnedCells.Clear();
+        spawnedNodes.Clear();
 
         mapArray = new int[gridSizeX, gridSizeY];
         mapArrayCount = default;
@@ -184,75 +184,33 @@ public class New_MapManager : MonoBehaviour
 
         //TODO swap this to instantiating a Node? Then add connection to previous node
         //TODO maybe have node and cell seperate, to allow purely cell based features in additon to
-        New_TempCell newCell = Instantiate(cellPrefab, position, Quaternion.identity);
-        TMP_Text cellText = newCell.gameObject.transform.GetChild(0).GetComponent<TMP_Text>();
+        GameObject newRoomObj = Instantiate(newRoom, position, Quaternion.identity);
+        TMP_Text cellText = newRoomObj.gameObject.transform.GetChild(0).GetComponent<TMP_Text>();
         Node newNode = nodeGraph.AddNode(cellPos);
 
-        for (int i = 0; i < spawnedCells.Count; i++)
+        for (int i = 0; i < spawnedNodes.Count; i++)
         {
             // This is used to get the neighbouring node from which this new node is being created. (via the cell object intermediary)
             // The previous and current cell pos should only ever be the same for the root cell, in which case no connection is needed
-            if (spawnedCells[i].mapPos == previousCellPos && cellPos != previousCellPos)
+            if (spawnedNodes[i].gridPos == previousCellPos && cellPos != previousCellPos)
             {
-                newNode.AddConnection(spawnedCells[i].node);
+                newNode.AddConnection(spawnedNodes[i]);
                 break;
             }
         }
 
-        // //TODO make this a const up top
+        newNode.directionalRoomPrefab = newRoomObj;
+
+        //TODO make this a const up top
+        //TODO check if an edge weight is needed
         int EDGE_WEIGHT = 1;
 
-        // Some of these values are set both in the cell and node to allow for location specific data based on grid position, vs purely node data that could use the cell data
-        // This could lead to certain rooms being more humid due to water conditions
-        newCell.id = newNode.id;
-        newCell.node = newNode;
-        newCell.value = EDGE_WEIGHT;
-        newCell.mapPos = cellPos;
         // Replaces the "1" used in previous function that was used to show the cell was occupied, with the int id of the Node/Cell
         mapArray[cellPos.x, cellPos.y] = newNode.id;
 
-        cellText.SetText("ID: " + newCell.id);
+        cellText.SetText("ID: " + newNode.id);
 
-        spawnedCells.Add(newCell);
+        spawnedNodes.Add(newNode);
 
     }
-
-    // private void SpawnRoom(Vector2Int cellPos, Vector2Int previousCellPos)
-    // {
-    //     Vector2 position = new Vector2(cellPos.x * cellSize, -cellPos.y * cellSize);
-
-    //     //TODO swap this to instantiating a Node? Then add connection to previous node
-    //     //TODO maybe have node and cell seperate, to allow purely cell based features in additon to
-    //     GameObject newRoomObj = Instantiate(newRoom, position, Quaternion.identity);
-    //     TMP_Text cellText = newRoomObj.gameObject.transform.GetChild(0).GetComponent<TMP_Text>();
-    //     Node newNode = nodeGraph.AddNode(cellPos);
-
-    //     for (int i = 0; i < spawnedCells.Count; i++)
-    //     {
-    //         // This is used to get the neighbouring node from which this new node is being created. (via the cell object intermediary)
-    //         // The previous and current cell pos should only ever be the same for the root cell, in which case no connection is needed
-    //         if (spawnedCells[i].mapPos == previousCellPos && cellPos != previousCellPos)
-    //         {
-    //             newNode.AddConnection(spawnedCells[i].node);
-    //             break;
-    //         }
-    //     }
-
-    //     // //TODO make this a const up top
-    //     int EDGE_WEIGHT = 1;
-
-    //     // Some of these values are set both in the cell and node to allow for location specific data based on grid position, vs purely node data that could use the cell data
-    //     // This could lead to certain rooms being more humid due to water conditions
-    //     newCell.id = newNode.id;
-    //     newCell.node = newNode;
-    //     newCell.value = EDGE_WEIGHT;
-    //     newCell.mapPos = cellPos;
-    //     // Replaces the "1" used in previous function that was used to show the cell was occupied, with the int id of the Node/Cell
-    //     mapArray[cellPos.x, cellPos.y] = newNode.id;
-
-    //     cellText.SetText("ID: " + newCell.id);
-
-    //     spawnedCells.Add(newCell);
-
-    // }
 }

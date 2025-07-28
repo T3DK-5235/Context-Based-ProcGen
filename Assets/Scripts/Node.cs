@@ -21,8 +21,10 @@ public class Connection
 public class Node
 {
     public int id { get; }
-    public Vector2Int gridPos;
+    public Vector2Int gridPos { get; }
     public List<Connection> connections { get; }
+
+    public GameObject directionalRoomPrefab { get; set; }
 
     public Node(int id, Vector2Int gridPos)
     {
