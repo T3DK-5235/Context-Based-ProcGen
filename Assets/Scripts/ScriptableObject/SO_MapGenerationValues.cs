@@ -15,8 +15,15 @@ public class SO_MapGenerationValues : ScriptableObject
     [SerializeField] int initialCellX;
     [SerializeField] int initialCellY;
 
+    [Header("Basic Room Types")]
+    [SerializeField] GameObject basicDeadEnd;
+    [SerializeField] GameObject basicCorner;
+    [SerializeField] GameObject basicHallway;
+    [SerializeField] GameObject basicTJunction;
+    [SerializeField] GameObject basicCrossJunction;
+
     [Header("Room Prefabs and Layout")]
-    [SerializeField] SO_RoomTypes roomTypeStorage;
-    [SerializeField] SO_RoomTypes roomContextTypeStorage;
-    [SerializeField] SO_RoomTypes roomVisualTypeStorage;
+    [SerializeField] SO_RoomTypeContainer roomTypeStorage;
+    [SerializeField] SO_RoomVisualTypes roomContextTypeStorage;
+    [SerializeField] SO_RoomGameplayTypes roomVisualTypeStorage;
 }

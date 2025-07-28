@@ -36,8 +36,8 @@ public class Node
         Connection newConnection = new Connection(this, childNode);
         connections.Add(newConnection);
 
+        // Checks if a connection from the childnode to this node exists yet, and adds it if not.
         List<Connection> childConnections = childNode.connections;
-
         if (!(childConnections.Exists(x => (x.parent == childNode) && (x.child == this)))) { childNode.AddConnection(this); }
 
         return this;

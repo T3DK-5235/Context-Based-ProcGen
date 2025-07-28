@@ -79,14 +79,14 @@ public class Graph
         string topbar = "";
         for (int i = 0; i < Count; i++)
         {
-            topbar += ((char)('A' + i) + "  ");
+            topbar += (totalNodeList[i].id + "  ");
         }
         Debug.Log(topbar);
 
         for (int i = 0; i < Count; i++)
         {
             //Debug.Log((char)('A' + i) + " | [ ");
-            String outputRow = (char)('A' + i) + " | [ ";
+            String outputRow = totalNodeList[i].id + " | [ ";
             for (int j = 0; j < Count; j++)
             {
                 if (i == j)

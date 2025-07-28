@@ -1,7 +1,7 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "RoomContextTypes", menuName = "Scriptable Objects/RoomContextTypes")]
-public class SO_RoomContextTypes : ScriptableObject
+[CreateAssetMenu(fileName = "RoomGameplayTypes", menuName = "Scriptable Objects/RoomGameplayTypes")]
+public class SO_RoomGameplayTypes : ScriptableObject
 {
     
 }
