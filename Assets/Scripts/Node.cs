@@ -25,12 +25,14 @@ public class Node
     public List<Connection> connections { get; }
 
     public GameObject directionalRoomPrefab { get; set; }
+    public E_CardinalDirections[] occupiedCardinalDirections;
 
     public Node(int id, Vector2Int gridPos)
     {
         this.id = id;
         this.gridPos = gridPos;
         connections = new List<Connection>();
+        occupiedCardinalDirections = new E_CardinalDirections[4];
     }
 
     public Node AddConnection(Node childNode)
@@ -48,6 +50,11 @@ public class Node
     public void ClearConnections()
     {
         connections.Clear();
+    }
+
+    public void AddCardinalNeighbour(E_CardinalDirections occupiedDirection)
+    {
+        occupiedCardinalDirections[(int)occupiedDirection] = occupiedDirection;
     }
 
     //public List<Connection> GetConnections() { return connections; }

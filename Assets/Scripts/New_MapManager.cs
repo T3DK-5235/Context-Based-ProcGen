@@ -70,7 +70,7 @@ public class New_MapManager : MonoBehaviour
         endRooms = new List<Vector2Int>();
 
         Vector2Int initialPosition = new Vector2Int(initialCellX, initialCellY);
-        VisitCell(initialPosition, initialPosition);
+        VisitCell(initialPosition, initialPosition, E_CardinalDirections.NONE);
 
         GenerateMap();
     }
@@ -109,19 +109,19 @@ public class New_MapManager : MonoBehaviour
             // Cascades through the if statements and attempts to create new cells
             if (cellPos.x > 1)
             {
-                created |= VisitCell(new Vector2Int(cellPos.x - 1, cellPos.y), cellPos);
+                created |= VisitCell(new Vector2Int(cellPos.x - 1, cellPos.y), cellPos, E_CardinalDirections.NORTH);
             }
             if (cellPos.x < 8)
             {
-                created |= VisitCell(new Vector2Int(cellPos.x + 1, cellPos.y), cellPos);
+                created |= VisitCell(new Vector2Int(cellPos.x + 1, cellPos.y), cellPos, E_CardinalDirections.EAST);
             }
             if (cellPos.y > 2)
             {
-                created |= VisitCell(new Vector2Int(cellPos.x, cellPos.y - 1), cellPos);
+                created |= VisitCell(new Vector2Int(cellPos.x, cellPos.y - 1), cellPos, E_CardinalDirections.WEST);
             }
             if (cellPos.y < 7)
             {
-                created |= VisitCell(new Vector2Int(cellPos.x, cellPos.y + 1), cellPos);
+                created |= VisitCell(new Vector2Int(cellPos.x, cellPos.y + 1), cellPos, E_CardinalDirections.SOUTH);
             }
 
             // if a new cell is not created, add the existing index to the endrooms list
@@ -144,6 +144,9 @@ public class New_MapManager : MonoBehaviour
         Debug.Log("Finished Physical Map Gen");
         Debug.Log("End Room Number: " + endRooms.Count);
         nodeGraph.CreateAdjacencyMatrix();
+
+        //TODO loop through node array, check number of neighbours and cardinal directions, use these values to determine the basic room shape
+        //TODO use bool isEqual = Enumerable.SequenceEqual(target1, target2); to check patterns of room directions for rotation needs
     }
 
     int GetRandomEndRoom()
@@ -153,7 +156,6 @@ public class New_MapManager : MonoBehaviour
 
     private int GetNeighbourCount(int cellPosX, int cellPosY)
     {
-        //return mapArray[index - 10] + mapArray[index - 1] + mapArray[index + 1] + mapArray[index + 10];
         int occupiedNeighbours = 0;
         if (mapArray[cellPosX + 1, cellPosY] != 0) { occupiedNeighbours++; }
         if (mapArray[cellPosX - 1, cellPosY] != 0) { occupiedNeighbours++; }
@@ -162,7 +164,21 @@ public class New_MapManager : MonoBehaviour
         return occupiedNeighbours;
     }
 
-    private bool VisitCell(Vector2Int cellPos, Vector2Int previousCellPos)
+    private int[] GetNeighbouringCellDirections(Node centralNode)
+    {
+        int cellPosX = centralNode.gridPos.x;
+        int cellPosY = centralNode.gridPos.y;
+
+        int[] occupiedCardinalDirections = new int[4];
+
+        if (mapArray[cellPosX - 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.NORTH] = 1; }
+        if (mapArray[cellPosX + 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.SOUTH] = 1; }
+        if (mapArray[cellPosX, cellPosY + 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.EAST] = 1; }
+        if (mapArray[cellPosX, cellPosY - 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.WEST] = 1; }
+        return occupiedCardinalDirections;
+    }
+
+    private bool VisitCell(Vector2Int cellPos, Vector2Int previousCellPos, E_CardinalDirections traversalDirection)
     {
         if ((mapArray[cellPos.x, cellPos.y] != 0) || (GetNeighbourCount(cellPos.x, cellPos.y) > 1) || (mapArrayCount > maxNodes) || (Random.value < 0.4))
         {
@@ -173,19 +189,19 @@ public class New_MapManager : MonoBehaviour
         mapArray[cellPos.x, cellPos.y] = 1;
         mapArrayCount++;
 
-        SpawnRoom(cellPos, previousCellPos);
+        SpawnRoom(cellPos, previousCellPos, traversalDirection);
 
         return true;
     }
 
-    private void SpawnRoom(Vector2Int cellPos, Vector2Int previousCellPos)
+    private void SpawnRoom(Vector2Int cellPos, Vector2Int previousCellPos, E_CardinalDirections traversalDirection)
     {
         Vector2 position = new Vector2(cellPos.x * cellSize, -cellPos.y * cellSize);
-
-        //TODO swap this to instantiating a Node? Then add connection to previous node
-        //TODO maybe have node and cell seperate, to allow purely cell based features in additon to
         GameObject newRoomObj = Instantiate(newRoom, position, Quaternion.identity);
+
+        //TODO remove this text section once debugging is finished
         TMP_Text cellText = newRoomObj.gameObject.transform.GetChild(0).GetComponent<TMP_Text>();
+
         Node newNode = nodeGraph.AddNode(cellPos);
 
         for (int i = 0; i < spawnedNodes.Count; i++)
@@ -199,9 +215,12 @@ public class New_MapManager : MonoBehaviour
             }
         }
 
+        
+
+        //TODO add whatever direction this new cell is in, into a list of occupied cardinal directions in the node, for room rotation needs.
+
         newNode.directionalRoomPrefab = newRoomObj;
 
-        //TODO make this a const up top
         //TODO check if an edge weight is needed
         int EDGE_WEIGHT = 1;
 
