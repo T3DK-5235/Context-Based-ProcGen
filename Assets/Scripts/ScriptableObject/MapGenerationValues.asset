@@ -21,7 +21,7 @@ MonoBehaviour:
   basicDeadEnd: {fileID: 919132149155446097, guid: 2e27b3eb18832ff459b4088e1cbbbe32, type: 3}
   basicCorner: {fileID: 919132149155446097, guid: 4681e013fdc53ec4b8dd8be7954bf36f, type: 3}
   basicHallway: {fileID: 919132149155446097, guid: 1a7af326434b8664396e0bb1725afdfb, type: 3}
-  basicTJunction: {fileID: 919132149155446097, guid: 549226bf28e1d9d4caf28e0476e0b8ad, type: 3}
+  basicTJunction: {fileID: 919132149155446097, guid: 0abe9415a7f153e40902eb8ad2cfe008, type: 3}
   basicCrossJunction: {fileID: 919132149155446097, guid: aaec3b79eabeec1478a373d18c5d5c68, type: 3}
   roomTypeStorage: {fileID: 0}
   roomContextTypeStorage: {fileID: 0}

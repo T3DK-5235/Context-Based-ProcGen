@@ -22,6 +22,7 @@ public class New_MapManager : MonoBehaviour
     private float cellSize;
     private Queue<Vector2Int> cellQueue;
     private List<Node> spawnedNodes;
+    List<GameObject> spawnedRooms;
 
     private Graph nodeGraph;
 
@@ -39,6 +40,7 @@ public class New_MapManager : MonoBehaviour
 
         cellSize = 0.5f;
         spawnedNodes = new List<Node>();
+        spawnedRooms = new List<GameObject>();
 
         nodeGraph = new Graph(0, new Vector2Int(initialCellX, initialCellY), mapGenValues);
 
@@ -62,8 +64,14 @@ public class New_MapManager : MonoBehaviour
             Destroy(spawnedNodes[i].directionalRoomPrefab);
         }
 
+        for (int i = 0; i < spawnedRooms.Count; i++)
+        {
+            Destroy(spawnedRooms[i]);
+        }
+
         nodeGraph.ClearGraph();
         spawnedNodes.Clear();
+        spawnedRooms.Clear();
 
         mapArray = new int[gridSizeX, gridSizeY];
         mapArrayCount = default;
@@ -166,8 +174,12 @@ public class New_MapManager : MonoBehaviour
             (int, GameObject) basicRoomData = spawnedNodes[i].SetupBasicRoom(GetNeighbourCount(spawnedNodes[i].gridPos.x, spawnedNodes[i].gridPos.y));
 
             Vector3 roomPhysicalPosition = new Vector3(cellPosX * (cellSize * 30), 0, -cellPosY * (cellSize * 30));
+            Debug.Log("Node ID: " + spawnedNodes[i].id + " --- Rotation amount = " + basicRoomData.Item1);
             Quaternion roomRotation = Quaternion.Euler(0, basicRoomData.Item1, 0);
-            Instantiate(basicRoomData.Item2,  roomPhysicalPosition, roomRotation);
+
+            GameObject newRoom = Instantiate(basicRoomData.Item2, roomPhysicalPosition, roomRotation);
+            spawnedRooms.Add(newRoom);
+            //TODO BIG TODO - DELETE OLD PREFABS WHEN CREATING NEW MAP
         }
 
         //TODO loop through node array, check number of neighbours and cardinal directions, use these values to determine the basic room shape
