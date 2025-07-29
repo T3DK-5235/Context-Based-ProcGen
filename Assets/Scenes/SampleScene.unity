@@ -489,6 +489,7 @@ MonoBehaviour:
   cellPrefab: {fileID: 2146330656765251699, guid: b49e022ca84b25c4fa5ec0d1e1101985, type: 3}
   initialCellX: 5
   initialCellY: 6
+  mapGenValues: {fileID: 11400000, guid: a2e02609926259048978389df6714fb0, type: 2}
   newRoom: {fileID: 6959138989329572436, guid: b49e022ca84b25c4fa5ec0d1e1101985, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

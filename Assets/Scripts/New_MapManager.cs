@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using System;
 
 
 public class New_MapManager : MonoBehaviour
@@ -28,7 +29,7 @@ public class New_MapManager : MonoBehaviour
     public int initialCellY = 6;
 
 
-
+    [SerializeField] SO_MapGenerationValues mapGenValues;
     [SerializeField] GameObject newRoom;
 
     void Start()
@@ -39,7 +40,7 @@ public class New_MapManager : MonoBehaviour
         cellSize = 0.5f;
         spawnedNodes = new List<Node>();
 
-        nodeGraph = new Graph(0, new Vector2Int(initialCellX, initialCellY));
+        nodeGraph = new Graph(0, new Vector2Int(initialCellX, initialCellY), mapGenValues);
 
         SetupMap();
     }
@@ -145,6 +146,30 @@ public class New_MapManager : MonoBehaviour
         Debug.Log("End Room Number: " + endRooms.Count);
         nodeGraph.CreateAdjacencyMatrix();
 
+        //TODO figure out if to turn "4" into a const up top to avoid magic numbers
+        // N/E/S/W
+        int[] occupiedCardinalDirections = new int[4];
+        for (int i = 0; i < spawnedNodes.Count; i++)
+        {
+            Array.Clear(occupiedCardinalDirections, 0, occupiedCardinalDirections.Length);
+
+            int cellPosX = spawnedNodes[i].gridPos.x;
+            int cellPosY = spawnedNodes[i].gridPos.y;
+
+            // Check which directions from the node are occupied by another node
+            if (mapArray[cellPosX - 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.NORTH] = 1; }
+            if (mapArray[cellPosX + 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.SOUTH] = 1; }
+            if (mapArray[cellPosX, cellPosY + 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.EAST] = 1; }
+            if (mapArray[cellPosX, cellPosY - 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.WEST] = 1; }
+
+            spawnedNodes[i].AddCardinalNeighbourSet(occupiedCardinalDirections);
+            (int, GameObject) basicRoomData = spawnedNodes[i].SetupBasicRoom(GetNeighbourCount(spawnedNodes[i].gridPos.x, spawnedNodes[i].gridPos.y));
+
+            Vector3 roomPhysicalPosition = new Vector3(cellPosX * (cellSize * 30), 0, -cellPosY * (cellSize * 30));
+            Quaternion roomRotation = Quaternion.Euler(0, basicRoomData.Item1, 0);
+            Instantiate(basicRoomData.Item2,  roomPhysicalPosition, roomRotation);
+        }
+
         //TODO loop through node array, check number of neighbours and cardinal directions, use these values to determine the basic room shape
         //TODO use bool isEqual = Enumerable.SequenceEqual(target1, target2); to check patterns of room directions for rotation needs
     }
@@ -164,23 +189,23 @@ public class New_MapManager : MonoBehaviour
         return occupiedNeighbours;
     }
 
-    private int[] GetNeighbouringCellDirections(Node centralNode)
-    {
-        int cellPosX = centralNode.gridPos.x;
-        int cellPosY = centralNode.gridPos.y;
+    // private int[] GetNeighbouringCellDirections(Node centralNode)
+    // {
+    //     int cellPosX = centralNode.gridPos.x;
+    //     int cellPosY = centralNode.gridPos.y;
 
-        int[] occupiedCardinalDirections = new int[4];
+    //     int[] occupiedCardinalDirections = new int[4];
 
-        if (mapArray[cellPosX - 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.NORTH] = 1; }
-        if (mapArray[cellPosX + 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.SOUTH] = 1; }
-        if (mapArray[cellPosX, cellPosY + 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.EAST] = 1; }
-        if (mapArray[cellPosX, cellPosY - 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.WEST] = 1; }
-        return occupiedCardinalDirections;
-    }
+    //     if (mapArray[cellPosX - 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.NORTH] = 1; }
+    //     if (mapArray[cellPosX + 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.SOUTH] = 1; }
+    //     if (mapArray[cellPosX, cellPosY + 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.EAST] = 1; }
+    //     if (mapArray[cellPosX, cellPosY - 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.WEST] = 1; }
+    //     return occupiedCardinalDirections;
+    // }
 
     private bool VisitCell(Vector2Int cellPos, Vector2Int previousCellPos, E_CardinalDirections traversalDirection)
     {
-        if ((mapArray[cellPos.x, cellPos.y] != 0) || (GetNeighbourCount(cellPos.x, cellPos.y) > 1) || (mapArrayCount > maxNodes) || (Random.value < 0.4))
+        if ((mapArray[cellPos.x, cellPos.y] != 0) || (GetNeighbourCount(cellPos.x, cellPos.y) > 1) || (mapArrayCount > maxNodes) || (UnityEngine.Random.value < 0.4))
         {
             return false;
         }
@@ -214,8 +239,6 @@ public class New_MapManager : MonoBehaviour
                 break;
             }
         }
-
-        
 
         //TODO add whatever direction this new cell is in, into a list of occupied cardinal directions in the node, for room rotation needs.
 

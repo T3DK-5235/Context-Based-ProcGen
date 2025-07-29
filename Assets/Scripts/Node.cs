@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using NUnit.Framework.Internal;
 using UnityEditor.MemoryProfiler;
@@ -25,14 +26,28 @@ public class Node
     public List<Connection> connections { get; }
 
     public GameObject directionalRoomPrefab { get; set; }
-    public E_CardinalDirections[] occupiedCardinalDirections;
+    public int[] occupiedCardinalDirections;
 
-    public Node(int id, Vector2Int gridPos)
+    //TODO need to pass this in from MapManager
+    private SO_MapGenerationValues genValues;
+
+    // Room Orientation Handling 
+    // Dead End
+    public static int[] defaultDeadEndConnections = { 0, 0, 1, 0 };
+    // 2 Entrances
+    public static int[] defaultCornerConnections = { 0, 0, 1, 1 };
+    public static int[] defaultHallwayConnections = { 1, 0, 1, 0 };
+    // 3 Entrances
+    public static int[] defaultTShapeConnections = { 0, 1, 1, 1 };
+
+    public Node(int id, Vector2Int gridPos, SO_MapGenerationValues genValues)
     {
         this.id = id;
         this.gridPos = gridPos;
+        this.genValues = genValues;
         connections = new List<Connection>();
-        occupiedCardinalDirections = new E_CardinalDirections[4];
+        // N/E/S/W
+        occupiedCardinalDirections = new int[4];
     }
 
     public Node AddConnection(Node childNode)
@@ -52,9 +67,75 @@ public class Node
         connections.Clear();
     }
 
-    public void AddCardinalNeighbour(E_CardinalDirections occupiedDirection)
+    public void AddCardinalNeighbourSet(int[] occupiedDirection)
     {
-        occupiedCardinalDirections[(int)occupiedDirection] = occupiedDirection;
+        this.occupiedCardinalDirections = occupiedDirection;
+    }
+
+    //TODO check if I need to pass in neighbour count vs checking length of connections list
+    public (int, GameObject) SetupBasicRoom(int neighbourCount)
+    {
+        //(int, GameObject) basicRoomRotation = CheckBasicRoomRotation(neighbourCount);
+        return CheckBasicRoomRotation(neighbourCount);
+    }
+
+    private (int, GameObject) CheckBasicRoomRotation(int neighbourCount)
+    {
+        int rotationDegree = 0;
+        GameObject relevantPrefab = null;
+        switch (neighbourCount)
+        {
+            case 1:
+                relevantPrefab = genValues.basicDeadEnd;
+
+                if (occupiedCardinalDirections == defaultDeadEndConnections) { break; }
+                if (occupiedCardinalDirections[(int)E_CardinalDirections.EAST] == 1) { rotationDegree = 270; break; }
+                if (occupiedCardinalDirections[(int)E_CardinalDirections.WEST] == 1) { rotationDegree = 90; break; }
+                if (occupiedCardinalDirections[(int)E_CardinalDirections.NORTH] == 1) { rotationDegree = 180; break; }
+
+                break;
+            case 2:
+                int[] swappedHallwayConnections = new int[defaultHallwayConnections.Length];
+                Array.Copy(defaultHallwayConnections, swappedHallwayConnections, defaultHallwayConnections.Length);
+                // Reversing the array creates the same array as a East to West hallway
+                Array.Reverse(swappedHallwayConnections);
+
+                // This will be true for straight line segments heading either north to south OR west to east
+                if (occupiedCardinalDirections == defaultHallwayConnections || occupiedCardinalDirections == swappedHallwayConnections)
+                {
+                    relevantPrefab = genValues.basicHallway;
+
+                    if (occupiedCardinalDirections == defaultHallwayConnections) { break; }
+                    else { rotationDegree = 90; break; }
+                }
+                else
+                {
+                    relevantPrefab = genValues.basicCorner;
+
+                    if (occupiedCardinalDirections == defaultCornerConnections) { break; }
+                    // If the default (South and West) isn't correct, but there is still a south connection, the corner must face right (East)
+                    if (occupiedCardinalDirections[(int)E_CardinalDirections.SOUTH] == 1) { rotationDegree = 270; break; }
+                    // If the previous two are incorrect, but there is still an east connection, the corner must connect the North and East sides
+                    if (occupiedCardinalDirections[(int)E_CardinalDirections.EAST] == 1) { rotationDegree = 180; break; }
+                    if (occupiedCardinalDirections[(int)E_CardinalDirections.NORTH] == 1) { rotationDegree = 90; break; }
+                }
+
+                break;
+            case 3:
+                relevantPrefab = genValues.basicTJunction;
+                // If the occupied directions are the same as the default for the room, do nothing
+                if (occupiedCardinalDirections == defaultTShapeConnections) { break; }
+                // If there is a not a southern connection (default entryway direction) return 180, as none of the 3 connections can be south
+                if (occupiedCardinalDirections[(int)E_CardinalDirections.SOUTH] != 1) { rotationDegree = 180; break; }
+                if (occupiedCardinalDirections[(int)E_CardinalDirections.EAST] != 1) { rotationDegree =  90; break; }
+                if (occupiedCardinalDirections[(int)E_CardinalDirections.WEST] != 1) { rotationDegree =  270; break; }
+                break;
+            default:
+                // If 4 exits are found, no rotation is needed as all cardinal directions are occupied
+                relevantPrefab = genValues.basicCrossJunction;
+                break;
+        }
+        return (rotationDegree, relevantPrefab);
     }
 
     //public List<Connection> GetConnections() { return connections; }

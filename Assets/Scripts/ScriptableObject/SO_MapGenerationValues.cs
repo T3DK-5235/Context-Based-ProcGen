@@ -4,26 +4,26 @@ using UnityEngine;
 public class SO_MapGenerationValues : ScriptableObject
 {
     [Header("Grid Size")]
-    [SerializeField] int gridSizeX;
-    [SerializeField] int gridSizeY;
+    [SerializeField] public int gridSizeX;
+    [SerializeField] public int gridSizeY;
 
     [Header("Cell Count")]
-    [SerializeField] int minCellCount;
-    [SerializeField] int maxCellCount;
+    [SerializeField] public int minCellCount;
+    [SerializeField] public int maxCellCount;
 
     [Header("Initial Cell Location")]
-    [SerializeField] int initialCellX;
-    [SerializeField] int initialCellY;
+    [SerializeField] public int initialCellX;
+    [SerializeField] public int initialCellY;
 
     [Header("Basic Room Types")]
-    [SerializeField] GameObject basicDeadEnd;
-    [SerializeField] GameObject basicCorner;
-    [SerializeField] GameObject basicHallway;
-    [SerializeField] GameObject basicTJunction;
-    [SerializeField] GameObject basicCrossJunction;
+    [SerializeField] public GameObject basicDeadEnd;
+    [SerializeField] public GameObject basicCorner;
+    [SerializeField] public GameObject basicHallway;
+    [SerializeField] public GameObject basicTJunction;
+    [SerializeField] public GameObject basicCrossJunction;
 
     [Header("Room Prefabs and Layout")]
-    [SerializeField] SO_RoomTypeContainer roomTypeStorage;
-    [SerializeField] SO_RoomVisualTypes roomContextTypeStorage;
-    [SerializeField] SO_RoomGameplayTypes roomVisualTypeStorage;
+    [SerializeField] public SO_RoomTypeContainer roomTypeStorage;
+    [SerializeField] public SO_RoomVisualTypes roomContextTypeStorage;
+    [SerializeField] public SO_RoomGameplayTypes roomVisualTypeStorage;
 }

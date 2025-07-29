@@ -11,14 +11,16 @@ public class Graph
     //TODO check if a dict of total nodes would be better. Or an additional dict assigning an id, or the grid pos to the node
     public List<Node> totalNodeList;
     private int idIncrementer;
+    private SO_MapGenerationValues genValues;
 
-    public Graph(int initialNodeID, Vector2Int initialNodePos)
+    public Graph(int initialNodeID, Vector2Int initialNodePos, SO_MapGenerationValues genValues)
     {
-        initialNode = new Node(initialNodeID, initialNodePos);
+        initialNode = new Node(initialNodeID, initialNodePos, genValues);
         totalNodeList = new List<Node>();
         // This value will increase whenever a new node is created.
         // Starts at 1, as 0 is reserved for the root node.
         idIncrementer = 1;
+        this.genValues = genValues;
     }
 
     // Used to clear out the existing graph if mapgen fails
@@ -34,7 +36,7 @@ public class Graph
 
     public Node AddNode(Vector2Int gridPos)
     {
-        Node newNode = new Node(idIncrementer++, gridPos);
+        Node newNode = new Node(idIncrementer++, gridPos, genValues);
         totalNodeList.Add(newNode);
         return newNode;
     }
