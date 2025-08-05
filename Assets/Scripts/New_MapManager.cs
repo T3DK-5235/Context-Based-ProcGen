@@ -31,7 +31,12 @@ public class New_MapManager : MonoBehaviour
 
 
     [SerializeField] SO_MapGenerationValues mapGenValues;
+    [SerializeField] SO_RoomTypeContainer allRoomTypes;
+
+    //Currently stores 2d image placeholder for testing
     [SerializeField] GameObject newRoom;
+    // A tempt object for visually showing info when debugging
+    [SerializeField] GameObject roomInfoPrefab;
 
     void Start()
     {
@@ -43,6 +48,8 @@ public class New_MapManager : MonoBehaviour
         spawnedRooms = new List<GameObject>();
 
         nodeGraph = new Graph(0, new Vector2Int(initialCellX, initialCellY), mapGenValues);
+
+        allRoomTypes.LinkEnumToObject();
 
         SetupMap();
     }
@@ -86,6 +93,7 @@ public class New_MapManager : MonoBehaviour
 
     void GenerateMap()
     {
+
         while (cellQueue.Count > 0)
         {
             Vector2Int cellPos = cellQueue.Dequeue();
@@ -154,11 +162,21 @@ public class New_MapManager : MonoBehaviour
         Debug.Log("End Room Number: " + endRooms.Count);
         nodeGraph.CreateAdjacencyMatrix();
 
+        // /TODO improve this later, currently just randomly picks a set of room types
+        // E_RoomTypes[] chosenRoomTypes = new E_RoomTypes[spawnedNodes.Count];
+
+        // GetNames is significantly faster than GetValues I believe due to it checking for duplicated values?
+        int numOfRoomTypes = Enum.GetNames(typeof(E_RoomTypes)).Length;
+
         //TODO figure out if to turn "4" into a const up top to avoid magic numbers
-        // N/E/S/W
-        int[] occupiedCardinalDirections = new int[4];
+            // N/E/S/W
+            int[] occupiedCardinalDirections = new int[4];
+        // Loops through all nodes regardless of their relation to each other
         for (int i = 0; i < spawnedNodes.Count; i++)
         {
+            //=================================================================================
+            //                         Handles initial room prefab
+            //=================================================================================
             Array.Clear(occupiedCardinalDirections, 0, occupiedCardinalDirections.Length);
 
             int cellPosX = spawnedNodes[i].gridPos.x;
@@ -171,19 +189,47 @@ public class New_MapManager : MonoBehaviour
             if (mapArray[cellPosX, cellPosY - 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.WEST] = 1; }
 
             spawnedNodes[i].AddCardinalNeighbourSet(occupiedCardinalDirections);
+
+            // Get a random room type from the list
+            E_RoomTypes chosenRoomType = (E_RoomTypes)UnityEngine.Random.Range(0, numOfRoomTypes);
+            spawnedNodes[i].roomType = chosenRoomType;
+
+            // Returns rotation and basic room outer structure (a prefab with the correct number of doors, currently only one of each type exists)
             (int, GameObject) basicRoomData = spawnedNodes[i].SetupBasicRoom(GetNeighbourCount(spawnedNodes[i].gridPos.x, spawnedNodes[i].gridPos.y));
 
             Vector3 roomPhysicalPosition = new Vector3(cellPosX * (cellSize * 30), 0, -cellPosY * (cellSize * 30));
             Debug.Log("Node ID: " + spawnedNodes[i].id + " --- Rotation amount = " + basicRoomData.Item1);
             Quaternion roomRotation = Quaternion.Euler(0, basicRoomData.Item1, 0);
 
-            GameObject newRoom = Instantiate(basicRoomData.Item2, roomPhysicalPosition, roomRotation);
-            spawnedRooms.Add(newRoom);
-            //TODO BIG TODO - DELETE OLD PREFABS WHEN CREATING NEW MAP
-        }
+            //=================================================================================
+            //                         Handles initial room content (based on room type)
+            //=================================================================================
 
-        //TODO loop through node array, check number of neighbours and cardinal directions, use these values to determine the basic room shape
-        //TODO use bool isEqual = Enumerable.SequenceEqual(target1, target2); to check patterns of room directions for rotation needs
+           
+
+            //TODO move this Instantiation til a later point so all room features are instantiated at the same time?
+            //TODO if I do this, store the instantiation data in the node, as otherwise the physical position and rotation will be lost after this current loop
+            GameObject newRoom = Instantiate(basicRoomData.Item2, roomPhysicalPosition, roomRotation);
+
+            GameObject initialRoomContentPrefab;
+            SO_RoomType roomType;
+            if (allRoomTypes.enumToObjectDict.TryGetValue(spawnedNodes[i].roomType, out roomType))
+            {
+                initialRoomContentPrefab = roomType.baseRoomPrefab;
+                GameObject newRoomTypeContent = Instantiate(initialRoomContentPrefab, roomPhysicalPosition, roomRotation);
+            }
+
+
+            // Debugging text
+            GameObject newRoomInfo = Instantiate(roomInfoPrefab, roomPhysicalPosition, roomRotation);
+            TMP_Text roomInfo = newRoomInfo.gameObject.transform.GetComponent<TMP_Text>();
+            roomInfo.SetText("ID: " + spawnedNodes[i].id + " --- RoomType: " + spawnedNodes[i].roomType);
+            newRoomInfo.gameObject.transform.SetParent(newRoom.transform);
+            newRoomInfo.transform.Translate(0.0f, -1.0f, 0.0f, Space.Self);
+            newRoomInfo.transform.Rotate(-90.0f, 0.0f, 180.0f, Space.Self);
+            
+            spawnedRooms.Add(newRoom);
+        }
     }
 
     int GetRandomEndRoom()

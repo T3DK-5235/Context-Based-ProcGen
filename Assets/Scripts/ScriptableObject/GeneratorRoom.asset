@@ -10,10 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5039dfb911f204e41a7581713100a3e4, type: 3}
-  m_Name: RoomType
+  m_Name: GeneratorRoom
   m_EditorClassIdentifier: 
   roomType: 1
-  roomRarity: 0
-  inherentVisualTags: 0
-  inherentGameplayTags: 0
-  roomPrefab: {fileID: 0}
+  roomPriority: 1
+  maxInstances: 1
+  baseRoomPrefab: {fileID: 919132149155446097, guid: 9ecbb93520d0d8e448e1019c116d6691, type: 3}
+  isEndRoom: 0
+  featurePrefabs:
+  - {fileID: 919132149155446097, guid: 1fcb290c271a3e74ca7b53653b47c55c, type: 3}

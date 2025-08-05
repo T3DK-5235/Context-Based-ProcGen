@@ -32,6 +32,16 @@ public class Node
     //TODO need to pass this in from MapManager
     private SO_MapGenerationValues genValues;
 
+    // 
+    // private SO_RoomType relevantRoomType;
+    // // The current tags for the room
+    // List<E_RoomTags> roomTags { get; set; }
+
+    // List<GameObject> relevantRoomTags { get; set; }
+
+    public E_RoomTypes roomType { get; set; }
+    List<GameObject> relevantRoomPrefabs { get; set; }
+
     // Room Orientation Handling 
     // Dead End
     public static int[] defaultDeadEndConnections = { 0, 0, 1, 0 };
@@ -76,8 +86,8 @@ public class Node
     //TODO check if I need to pass in neighbour count vs checking length of connections list
     public (int, GameObject) SetupBasicRoom(int neighbourCount)
     {
-        //(int, GameObject) basicRoomRotation = CheckBasicRoomRotation(neighbourCount);
         return CheckBasicRoomRotation(neighbourCount);
+        // TODO have method for spawning in room prefabs as well
     }
 
     private (int, GameObject) CheckBasicRoomRotation(int neighbourCount)

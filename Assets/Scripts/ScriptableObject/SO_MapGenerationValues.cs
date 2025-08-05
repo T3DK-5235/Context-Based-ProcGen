@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 [CreateAssetMenu(fileName = "MapGenerationValues", menuName = "Scriptable Objects/MapGenerationValues")]
 public class SO_MapGenerationValues : ScriptableObject
@@ -23,7 +24,8 @@ public class SO_MapGenerationValues : ScriptableObject
     [SerializeField] public GameObject basicCrossJunction;
 
     [Header("Room Prefabs and Layout")]
-    [SerializeField] public SO_RoomTypeContainer roomTypeStorage;
-    [SerializeField] public SO_RoomVisualTypes roomContextTypeStorage;
-    [SerializeField] public SO_RoomGameplayTypes roomVisualTypeStorage;
+    [SerializeField] List<SO_RoomType> totalRoomTypes;
+    // [SerializeField] public SO_RoomTypeContainer roomTypeStorage;
+    // [SerializeField] public SO_RoomVisualTypes roomContextTypeStorage;
+    // [SerializeField] public SO_RoomGameplayTypes roomVisualTypeStorage;
 }

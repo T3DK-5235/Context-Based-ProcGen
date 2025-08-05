@@ -18,11 +18,9 @@ MonoBehaviour:
   maxCellCount: 0
   initialCellX: 0
   initialCellY: 0
-  basicDeadEnd: {fileID: 919132149155446097, guid: 2e27b3eb18832ff459b4088e1cbbbe32, type: 3}
-  basicCorner: {fileID: 919132149155446097, guid: 4681e013fdc53ec4b8dd8be7954bf36f, type: 3}
-  basicHallway: {fileID: 919132149155446097, guid: 1a7af326434b8664396e0bb1725afdfb, type: 3}
-  basicTJunction: {fileID: 919132149155446097, guid: 0abe9415a7f153e40902eb8ad2cfe008, type: 3}
-  basicCrossJunction: {fileID: 919132149155446097, guid: aaec3b79eabeec1478a373d18c5d5c68, type: 3}
-  roomTypeStorage: {fileID: 0}
-  roomContextTypeStorage: {fileID: 0}
-  roomVisualTypeStorage: {fileID: 0}
+  basicDeadEnd: {fileID: 919132149155446097, guid: 376d52eb912278540abe9a8465976857, type: 3}
+  basicCorner: {fileID: 919132149155446097, guid: 419921e859889364f8168652d0ebe9f6, type: 3}
+  basicHallway: {fileID: 919132149155446097, guid: 0fdc087a1e5366b46b86da162e745bbf, type: 3}
+  basicTJunction: {fileID: 919132149155446097, guid: 6a50aebe27d3b314f9b6f590e22cd1fa, type: 3}
+  basicCrossJunction: {fileID: 919132149155446097, guid: 8c8210ca8f9fdfb4fa9f12eaa8930526, type: 3}
+  totalRoomTypes: []
