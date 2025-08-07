@@ -26,7 +26,7 @@ public class Node
     public Vector2Int gridPos { get; }
     public List<Connection> connections { get; }
 
-    public GameObject directionalRoomPrefab { get; set; }
+    public GameObject basicMapPrefab { get; set; }
     public int[] occupiedCardinalDirections;
 
     //TODO need to pass this in from MapManager
@@ -73,7 +73,7 @@ public class Node
 
         return this;
     }
-
+    
     public void ClearConnections()
     {
         connections.Clear();
@@ -111,7 +111,7 @@ public class Node
                 {
                     providedCardinalDirections += ", " + occupiedCardinalDirections[i];
                 }
-                Debug.Log("Node ID: " + id + " --- providedCardinalDirections: " + providedCardinalDirections);
+                //Debug.Log("Node ID: " + id + " --- providedCardinalDirections: " + providedCardinalDirections);
 
                 // This will be true for straight line segments heading either north to south OR west to east
                 //if (occupiedCardinalDirections == defaultHallwayConnections || occupiedCardinalDirections == swappedHallwayConnections)

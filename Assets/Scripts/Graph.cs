@@ -31,6 +31,7 @@ public class Graph
         {
             totalNodeList[i].ClearConnections();
         }
+
         totalNodeList.Clear();
         idIncrementer = 1;
     }

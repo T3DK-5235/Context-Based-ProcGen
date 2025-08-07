@@ -21,8 +21,9 @@ public class New_MapManager : MonoBehaviour
     public New_TempCell cellPrefab;
     private float cellSize;
     private Queue<Node> nodeQueue;
-    private List<Node> spawnedNodes;
+    //private List<Node> spawnedNodes;
     List<GameObject> spawnedRooms;
+    List<GameObject> spawnedMapCells;
 
     private Graph nodeGraph;
 
@@ -46,8 +47,9 @@ public class New_MapManager : MonoBehaviour
         maxNodes = 24;
 
         cellSize = 0.5f;
-        spawnedNodes = new List<Node>();
+        //spawnedNodes = new List<Node>();
         spawnedRooms = new List<GameObject>();
+        spawnedMapCells = new List<GameObject>();
 
         featureOriginNodes = new List<Node>();
 
@@ -68,9 +70,9 @@ public class New_MapManager : MonoBehaviour
 
     void SetupMap()
     {
-        for (int i = 0; i < spawnedNodes.Count; i++)
+        for (int i = 0; i < spawnedMapCells.Count; i++)
         {
-            Destroy(spawnedNodes[i].directionalRoomPrefab);
+            Destroy(spawnedMapCells[i]);
         }
 
         for (int i = 0; i < spawnedRooms.Count; i++)
@@ -83,7 +85,6 @@ public class New_MapManager : MonoBehaviour
         }
 
         nodeGraph.ClearGraph();
-        spawnedNodes.Clear();
         spawnedRooms.Clear();
 
         mapArray = new int[gridSizeX, gridSizeY];
@@ -143,17 +144,41 @@ public class New_MapManager : MonoBehaviour
         }
 
         Debug.Log("Finished Initial Physical Map Gen");
-        Debug.Log("End Room Number: " + endRooms.Count);
+        //Debug.Log("End Room Number: " + endRooms.Count);
         nodeGraph.CreateAdjacencyMatrix();
 
-        // GetNames is significantly faster than GetValues I believe due to it checking for duplicated values?
-        int numOfRoomTypes = Enum.GetNames(typeof(E_RoomTypes)).Length;
+        SetupBasicRoomInfo();
+
+
+        //Debug.Log("Number of origin nodes: " + featureOriginNodes.Count);
+
+        //TODO do graph rewriting here, moving prefab spawning til later
+
+
+        //TODO feature spreading by looping through featureOriginNodes
+        //TODO move this to its own function
+        // Loops through all the stored nodes that have possible features to be spread to nearby rooms
+        for (int i = 0; i < featureOriginNodes.Count; i++)
+        {
+            List<SO_RoomFeature> featureList = featureOriginNodes[i].roomType.featurePrefabs;
+            for (int j = 0; j < featureList.Count; j++)
+            {
+                SpreadFeature(featureOriginNodes[i], featureList[j]);
+            }
+        }
+
+        BuildRoom();
+    }
+
+    private void SetupBasicRoomInfo()
+    {
+        List<Node> spawnedNodes = nodeGraph.totalNodeList;
 
         //TODO figure out if to turn "4" into a const up top to avoid magic numbers
-        //TODO move this to a seperate function?
         // N/E/S/W
         int[] occupiedCardinalDirections = new int[4];
         // Loops through all nodes regardless of their relation to each other
+
         for (int i = 0; i < spawnedNodes.Count; i++)
         {
             //=================================================================================
@@ -183,29 +208,12 @@ public class New_MapManager : MonoBehaviour
             // Prompts node to store rotation and basic room outer structure (a prefab with the correct number of doors, currently only one of each type exists)
             spawnedNodes[i].SetupBasicRoom(GetNeighbourCount(spawnedNodes[i].gridPos.x, spawnedNodes[i].gridPos.y));
         }
+    }
 
-        Debug.Log("Number of origin nodes: " + featureOriginNodes.Count);
+    private void BuildRoom()
+    {
+        List<Node> spawnedNodes = nodeGraph.totalNodeList;
 
-        //TODO do graph rewriting here, moving prefab spawning til later
-        //TODO feature spreading by looping through featureOriginNodes
-
-        // Loops through all the stored nodes that have possible features to be spread to nearby rooms
-        for (int i = 0; i < featureOriginNodes.Count; i++)
-        {
-            List<SO_RoomFeature> featureList = featureOriginNodes[i].roomType.featurePrefabs;
-            for (int j = 0; j < featureList.Count; j++)
-            {
-                SpreadFeature(featureOriginNodes[i], featureList[j]);
-            }
-        }
-
-
-        
-
-
-        //===============================================================================================================
-        //                         Handles the creation of the prefabs for each room
-        //===============================================================================================================
         for (int i = 0; i < spawnedNodes.Count; i++)
         {
             int cellPosX = spawnedNodes[i].gridPos.x;
@@ -213,7 +221,7 @@ public class New_MapManager : MonoBehaviour
 
             (int, GameObject) basicRoomData = spawnedNodes[i].basicRoomData;
             Vector3 roomPhysicalPosition = new Vector3(cellPosX * (cellSize * 30), 0, -cellPosY * (cellSize * 30));
-            Debug.Log("Node ID: " + spawnedNodes[i].id + " --- Rotation amount = " + basicRoomData.Item1);
+            //Debug.Log("Node ID: " + spawnedNodes[i].id + " --- Rotation amount = " + basicRoomData.Item1);
             Quaternion roomRotation = Quaternion.Euler(0, basicRoomData.Item1, 0);
 
             //TODO move this Instantiation til a later point so all room features are instantiated at the same time?
@@ -259,12 +267,12 @@ public class New_MapManager : MonoBehaviour
         mapArray[newCellPos.x, newCellPos.y] = 1;
         mapArrayCount++;
 
-        SpawnRoom(newNode, previousNode, traversalDirection);
+        InitRoom(newNode, previousNode, traversalDirection);
 
         return true;
     }
 
-    private void SpawnRoom(Node newNode, Node previousNode, E_CardinalDirections traversalDirection)
+    private void InitRoom(Node newNode, Node previousNode, E_CardinalDirections traversalDirection)
     {
         Vector2 position = new Vector2(newNode.gridPos.x * cellSize, -newNode.gridPos.y * cellSize);
         GameObject newRoomObj = Instantiate(newRoom, position, Quaternion.identity);
@@ -273,30 +281,14 @@ public class New_MapManager : MonoBehaviour
         TMP_Text cellText = newRoomObj.gameObject.transform.GetChild(0).GetComponent<TMP_Text>();
         cellText.SetText("ID: " + newNode.id);
 
-
-        // for (int i = 0; i < spawnedNodes.Count; i++)
-        // {
-        //     // This is used to get the neighbouring node from which this new node is being created. (via the cell object intermediary)
-        //     // The previous and current cell pos should only ever be the same for the root cell, in which case no connection is needed
-        //     if (spawnedNodes[i].gridPos == previousCellPos && cellPos != previousCellPos)
-        //     {
-        //         newNode.AddConnection(spawnedNodes[i]);
-        //         //nodeGraph.AddNodeConnection()
-        //         break;
-        //     }
-        // }
-
         // If statement is used to filter out the root node, as it has no previous node to connect to
         if (previousNode != null) { nodeGraph.AddNodeConnection(newNode, previousNode); }
 
-        //TODO rename this, as it's just a simplified map view
-        newNode.directionalRoomPrefab = newRoomObj;
+        newNode.basicMapPrefab = newRoomObj;
+        spawnedMapCells.Add(newRoomObj);
 
         // Replaces the "1" used in previous function that was used to show the cell was occupied, with the int id of the Node/Cell
         mapArray[newNode.gridPos.x, newNode.gridPos.y] = newNode.id;
-
-        spawnedNodes.Add(newNode);
-
     }
 
     private void SpreadFeature(Node rootNode, SO_RoomFeature roomFeature)
