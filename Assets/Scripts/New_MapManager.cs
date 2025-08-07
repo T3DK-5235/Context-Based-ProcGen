@@ -361,12 +361,22 @@ public class New_MapManager : MonoBehaviour
                 visitedNodes.Add(visitingNode);
                 //TODO have chance of spawning feature in that node
                 // Generate a percentage value
-                //int prefabSpawnChance = UnityEngine.Random.Range(0, 100);
-                int prefabSpawnChance = 90; //for testing currently
+                int prefabSpawnChance = UnityEngine.Random.Range(0, 100);
+                //Debug.Log("prefab spawn chance: " + roomFeature.linkChance + " --- " + "rolled chance: " + prefabSpawnChance);
                 //TODO improve bandage fix of preventing same prefab from spawning. Maybe return the visitedNodes and prefab type so it can be reused?
-                if (roomFeature.linkChance <= prefabSpawnChance && !visitingNode.relevantRoomPrefabs.Contains(roomFeature.featurePrefab))
+                if (roomFeature.linkChance >= prefabSpawnChance && !visitingNode.relevantRoomPrefabs.Contains(roomFeature.featurePrefab))
                 {
                     visitingNode.relevantRoomPrefabs.Add(roomFeature.featurePrefab);
+
+                    Debug.Log("Node ID: " + visitingNode.id + " --- Neighbour Count: " + nodeNeighbours.Count);
+                    for (int j = 0; j < nodeNeighbours.Count; j++)
+                    {
+                        if (visitedNodes.Contains(nodeNeighbours[j].child) == false)
+                        {
+                            Debug.Log("Child Node ID: " + nodeNeighbours[j].child.id);
+                            nextToVisit.Enqueue(nodeNeighbours[j].child);
+                        }
+                    }
                 }
 
                 // Add neighbours to the queue by checking that node's column in the adjacency matrix
@@ -381,16 +391,6 @@ public class New_MapManager : MonoBehaviour
                 //         if (visitingNode.id != j) { nextToVisit.Enqueue(totalNodeList[j]); }
                 //     }
                 // }
-
-                Debug.Log("Node ID: " + visitingNode.id + " --- Neighbour Count: " + nodeNeighbours.Count);
-                for (int j = 0; j < nodeNeighbours.Count; j++)
-                {
-                    if (visitedNodes.Contains(nodeNeighbours[j].child) == false)
-                    {
-                        Debug.Log("Child Node ID: " + nodeNeighbours[j].child.id);
-                        nextToVisit.Enqueue(nodeNeighbours[j].child);
-                    }
-                }
             }
         }
 
