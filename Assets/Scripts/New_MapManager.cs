@@ -208,12 +208,34 @@ public class New_MapManager : MonoBehaviour
 
             // Prompts node to store rotation and basic room outer structure (a prefab with the correct number of doors, currently only one of each type exists)
             spawnedNodes[i].SetupBasicRoom(GetNeighbourCount(spawnedNodes[i].gridPos.x, spawnedNodes[i].gridPos.y));
+        }
 
-            
+        Debug.Log("Number of origin nodes: " + featureOriginNodes.Count);
 
-            //=================================================================================
-            //                         Handles the creation of the prefabs for the room
-            //=================================================================================
+        //TODO do graph rewriting here, moving prefab spawning til later
+        //TODO feature spreading by looping through featureOriginNodes
+
+        // Loops through all the stored nodes that have possible features to be spread to nearby rooms
+        for (int i = 0; i < featureOriginNodes.Count; i++)
+        {
+            List<SO_RoomFeature> featureList = featureOriginNodes[i].roomType.featurePrefabs;
+            for (int j = 0; j < featureList.Count; j++)
+            {
+                SpreadFeature(featureOriginNodes[i], featureList[j]);
+            }
+        }
+
+
+        
+
+
+        //===============================================================================================================
+        //                         Handles the creation of the prefabs for each room
+        //===============================================================================================================
+        for (int i = 0; i < spawnedNodes.Count; i++)
+        {
+            int cellPosX = spawnedNodes[i].gridPos.x;
+            int cellPosY = spawnedNodes[i].gridPos.y;
 
             (int, GameObject) basicRoomData = spawnedNodes[i].basicRoomData;
             Vector3 roomPhysicalPosition = new Vector3(cellPosX * (cellSize * 30), 0, -cellPosY * (cellSize * 30));
@@ -237,21 +259,6 @@ public class New_MapManager : MonoBehaviour
             newRoomInfo.transform.Rotate(-90.0f, 0.0f, 180.0f, Space.Self);
 
             spawnedRooms.Add(newRoom);
-        }
-
-        Debug.Log("Number of origin nodes: " + featureOriginNodes.Count);
-
-        //TODO do graph rewriting here, moving prefab spawning til later
-        //TODO feature spreading by looping through featureOriginNodes
-
-        // Loops through all the stored nodes that have possible features to be spread to nearby rooms
-        for (int i = 0; i < featureOriginNodes.Count; i++)
-        {
-            List<SO_RoomFeature> featureList = featureOriginNodes[i].roomType.featurePrefabs;
-            for (int j = 0; j < featureList.Count; j++)
-            {
-                SpreadFeature(featureOriginNodes[i], featureList[j]);
-            }
         }
     }
 
