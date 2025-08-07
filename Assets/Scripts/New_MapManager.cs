@@ -12,7 +12,7 @@ public class New_MapManager : MonoBehaviour
     private int mapArrayCount;
     private int minNodes;
     private int maxNodes;
-    private List<Vector2Int> endRooms;
+    private List<Node> endRooms;
 
     public int gridSizeX;
     public int gridSizeY;
@@ -20,7 +20,7 @@ public class New_MapManager : MonoBehaviour
 
     public New_TempCell cellPrefab;
     private float cellSize;
-    private Queue<Vector2Int> cellQueue;
+    private Queue<Node> nodeQueue;
     private List<Node> spawnedNodes;
     List<GameObject> spawnedRooms;
 
@@ -88,12 +88,12 @@ public class New_MapManager : MonoBehaviour
 
         mapArray = new int[gridSizeX, gridSizeY];
         mapArrayCount = default;
-        cellQueue = new Queue<Vector2Int>();
-        endRooms = new List<Vector2Int>();
+        nodeQueue = new Queue<Node>();
+        endRooms = new List<Node>();
 
         Vector2Int initialPosition = new Vector2Int(initialCellX, initialCellY);
 
-        VisitCell(initialPosition, initialPosition, E_CardinalDirections.NONE);
+        VisitCell(initialPosition, null, E_CardinalDirections.NONE);
 
         GenerateMap();
     }
@@ -101,57 +101,34 @@ public class New_MapManager : MonoBehaviour
     void GenerateMap()
     {
 
-        while (cellQueue.Count > 0)
+        while (nodeQueue.Count > 0)
         {
-            Vector2Int cellPos = cellQueue.Dequeue();
+            Node previousNode = nodeQueue.Dequeue();
+            Vector2Int previousCellPos = previousNode.gridPos;
 
             bool created = false;
-
-            // Currently hardcoded to be a certain size
-            // if (cellPos.x > 1) { created |= VisitCell(new Vector2Int(xPos - 1, cellPos.y)); }
-            // if (cellPos.x < 9) { created |= VisitCell(new Vector2Int(xPos + 1, yPos)); }
-            // if (cellPos.y > 2) { created |= VisitCell(new Vector2Int(xPos, yPos - 1)); }
-            // if (cellPos.y < 7) { created |= VisitCell(new Vector2Int(xPos, yPos + 1)); }
-
-            // -1 is up, as it goes backwards through in values to prior cells of the array
-            // Vector2Int north = new Vector2Int(-1, 0) + cellPos;
-            // Vector2Int south = new Vector2Int(1, 0) + cellPos;
-            // Vector2Int east = new Vector2Int(0, -1) + cellPos;
-            // Vector2Int west = new Vector2Int(0, 1) + cellPos;
-
-            // int EXPANSION_DIRECTIONS = 4;
-            // int[] expansionChances = new int[EXPANSION_DIRECTIONS];
-
-            // for (int i = 0; i < EXPANSION_DIRECTIONS; i++)
-            // {
-            //     int random = Random.Range(0, 10);
-
-            // }
-
-            //Debug.Log("x position: " + cellPos.x + " --- y position: " + cellPos.y);
-
             // Cascades through the if statements and attempts to create new cells
-            if (cellPos.x > 1)
+            if (previousCellPos.x > 1)
             {
-                created |= VisitCell(new Vector2Int(cellPos.x - 1, cellPos.y), cellPos, E_CardinalDirections.NORTH);
+                created |= VisitCell(new Vector2Int(previousCellPos.x - 1, previousCellPos.y), previousNode, E_CardinalDirections.NORTH);
             }
-            if (cellPos.x < 8)
+            if (previousCellPos.x < 8)
             {
-                created |= VisitCell(new Vector2Int(cellPos.x + 1, cellPos.y), cellPos, E_CardinalDirections.EAST);
+                created |= VisitCell(new Vector2Int(previousCellPos.x + 1, previousCellPos.y), previousNode, E_CardinalDirections.EAST);
             }
-            if (cellPos.y > 2)
+            if (previousCellPos.y > 2)
             {
-                created |= VisitCell(new Vector2Int(cellPos.x, cellPos.y - 1), cellPos, E_CardinalDirections.WEST);
+                created |= VisitCell(new Vector2Int(previousCellPos.x, previousCellPos.y - 1), previousNode, E_CardinalDirections.WEST);
             }
-            if (cellPos.y < 7)
+            if (previousCellPos.y < 7)
             {
-                created |= VisitCell(new Vector2Int(cellPos.x, cellPos.y + 1), cellPos, E_CardinalDirections.SOUTH);
+                created |= VisitCell(new Vector2Int(previousCellPos.x, previousCellPos.y + 1), previousNode, E_CardinalDirections.SOUTH);
             }
 
             // if a new cell is not created, add the existing index to the endrooms list
             if (created == false)
             {
-                endRooms.Add(cellPos);
+                endRooms.Add(previousNode);
             }
 
         }
@@ -168,9 +145,6 @@ public class New_MapManager : MonoBehaviour
         Debug.Log("Finished Initial Physical Map Gen");
         Debug.Log("End Room Number: " + endRooms.Count);
         nodeGraph.CreateAdjacencyMatrix();
-
-        // /TODO improve this later, currently just randomly picks a set of room types
-        // E_RoomTypes[] chosenRoomTypes = new E_RoomTypes[spawnedNodes.Count];
 
         // GetNames is significantly faster than GetValues I believe due to it checking for duplicated values?
         int numOfRoomTypes = Enum.GetNames(typeof(E_RoomTypes)).Length;
@@ -262,11 +236,6 @@ public class New_MapManager : MonoBehaviour
         }
     }
 
-    int GetRandomEndRoom()
-    {
-        return -1;
-    }
-
     private int GetNeighbourCount(int cellPosX, int cellPosY)
     {
         int occupiedNeighbours = 0;
@@ -277,63 +246,54 @@ public class New_MapManager : MonoBehaviour
         return occupiedNeighbours;
     }
 
-    // private int[] GetNeighbouringCellDirections(Node centralNode)
-    // {
-    //     int cellPosX = centralNode.gridPos.x;
-    //     int cellPosY = centralNode.gridPos.y;
-
-    //     int[] occupiedCardinalDirections = new int[4];
-
-    //     if (mapArray[cellPosX - 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.NORTH] = 1; }
-    //     if (mapArray[cellPosX + 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.SOUTH] = 1; }
-    //     if (mapArray[cellPosX, cellPosY + 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.EAST] = 1; }
-    //     if (mapArray[cellPosX, cellPosY - 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.WEST] = 1; }
-    //     return occupiedCardinalDirections;
-    // }
-
-    private bool VisitCell(Vector2Int cellPos, Vector2Int previousCellPos, E_CardinalDirections traversalDirection)
+    private bool VisitCell(Vector2Int newCellPos, Node previousNode, E_CardinalDirections traversalDirection)
     {
-        if ((mapArray[cellPos.x, cellPos.y] != 0) || (GetNeighbourCount(cellPos.x, cellPos.y) > 1) || (mapArrayCount > maxNodes) || (UnityEngine.Random.value < 0.4))
+        if ((mapArray[newCellPos.x, newCellPos.y] != 0) || (GetNeighbourCount(newCellPos.x, newCellPos.y) > 1) || (mapArrayCount > maxNodes) || (UnityEngine.Random.value < 0.4))
         {
             return false;
         }
+        
+        Node newNode = nodeGraph.AddNode(newCellPos);
 
-        cellQueue.Enqueue(cellPos);
-        mapArray[cellPos.x, cellPos.y] = 1;
+        nodeQueue.Enqueue(newNode);
+        mapArray[newCellPos.x, newCellPos.y] = 1;
         mapArrayCount++;
 
-        SpawnRoom(cellPos, previousCellPos, traversalDirection);
+        SpawnRoom(newNode, previousNode, traversalDirection);
 
         return true;
     }
 
-    private void SpawnRoom(Vector2Int cellPos, Vector2Int previousCellPos, E_CardinalDirections traversalDirection)
+    private void SpawnRoom(Node newNode, Node previousNode, E_CardinalDirections traversalDirection)
     {
-        Vector2 position = new Vector2(cellPos.x * cellSize, -cellPos.y * cellSize);
+        Vector2 position = new Vector2(newNode.gridPos.x * cellSize, -newNode.gridPos.y * cellSize);
         GameObject newRoomObj = Instantiate(newRoom, position, Quaternion.identity);
-
-        Node newNode = nodeGraph.AddNode(cellPos);
 
         //TODO remove this text section once debugging is finished
         TMP_Text cellText = newRoomObj.gameObject.transform.GetChild(0).GetComponent<TMP_Text>();
         cellText.SetText("ID: " + newNode.id);
 
-        for (int i = 0; i < spawnedNodes.Count; i++)
-        {
-            // This is used to get the neighbouring node from which this new node is being created. (via the cell object intermediary)
-            // The previous and current cell pos should only ever be the same for the root cell, in which case no connection is needed
-            if (spawnedNodes[i].gridPos == previousCellPos && cellPos != previousCellPos)
-            {
-                newNode.AddConnection(spawnedNodes[i]);
-                break;
-            }
-        }
+
+        // for (int i = 0; i < spawnedNodes.Count; i++)
+        // {
+        //     // This is used to get the neighbouring node from which this new node is being created. (via the cell object intermediary)
+        //     // The previous and current cell pos should only ever be the same for the root cell, in which case no connection is needed
+        //     if (spawnedNodes[i].gridPos == previousCellPos && cellPos != previousCellPos)
+        //     {
+        //         newNode.AddConnection(spawnedNodes[i]);
+        //         //nodeGraph.AddNodeConnection()
+        //         break;
+        //     }
+        // }
+
+        // If statement is used to filter out the root node, as it has no previous node to connect to
+        if (previousNode != null) { nodeGraph.AddNodeConnection(newNode, previousNode); }
 
         //TODO rename this, as it's just a simplified map view
         newNode.directionalRoomPrefab = newRoomObj;
 
         // Replaces the "1" used in previous function that was used to show the cell was occupied, with the int id of the Node/Cell
-        mapArray[cellPos.x, cellPos.y] = newNode.id;
+        mapArray[newNode.gridPos.x, newNode.gridPos.y] = newNode.id;
 
         spawnedNodes.Add(newNode);
 
