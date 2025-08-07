@@ -40,7 +40,7 @@ public class Node
 
     // List<GameObject> relevantRoomTags { get; set; }
 
-    public E_RoomTypes roomType { get; set; }
+    public SO_RoomType roomType { get; set; }
     List<GameObject> relevantRoomPrefabs { get; set; }
 
     // Room Orientation Handling 

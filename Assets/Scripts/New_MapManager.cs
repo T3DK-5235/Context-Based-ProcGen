@@ -53,8 +53,6 @@ public class New_MapManager : MonoBehaviour
 
         nodeGraph = new Graph(0, new Vector2Int(initialCellX, initialCellY), mapGenValues);
 
-        allRoomTypes.LinkEnumToObject();
-
         SetupMap();
     }
 
@@ -77,6 +75,10 @@ public class New_MapManager : MonoBehaviour
 
         for (int i = 0; i < spawnedRooms.Count; i++)
         {
+            for (int j = 0; j < spawnedRooms[i].transform.childCount; j++)
+            {
+                Destroy(spawnedRooms[i].transform.GetChild(j).gameObject);
+            }
             Destroy(spawnedRooms[i]);
         }
 
@@ -196,39 +198,35 @@ public class New_MapManager : MonoBehaviour
 
             spawnedNodes[i].AddCardinalNeighbourSet(occupiedCardinalDirections);
 
-            // Get a random room type from the list
-            E_RoomTypes chosenRoomType = (E_RoomTypes)UnityEngine.Random.Range(0, numOfRoomTypes);
+            // Get a random room type from the initial possible room types list
+            List<SO_RoomType> possibleRoomTypeList = allRoomTypes.initialRoomTypes;
+            SO_RoomType chosenRoomType = possibleRoomTypeList[UnityEngine.Random.Range(0, possibleRoomTypeList.Count)];
             spawnedNodes[i].roomType = chosenRoomType;
+
+            // If the room has any feature prefabs that can be shared add it to a list that can be looped through later to spread those prefabs
+            if (chosenRoomType.featurePrefabs.Count > 0) { featureOriginNodes.Add(spawnedNodes[i]); }
 
             // Prompts node to store rotation and basic room outer structure (a prefab with the correct number of doors, currently only one of each type exists)
             spawnedNodes[i].SetupBasicRoom(GetNeighbourCount(spawnedNodes[i].gridPos.x, spawnedNodes[i].gridPos.y));
+
+            
+
+            //=================================================================================
+            //                         Handles the creation of the prefabs for the room
+            //=================================================================================
 
             (int, GameObject) basicRoomData = spawnedNodes[i].basicRoomData;
             Vector3 roomPhysicalPosition = new Vector3(cellPosX * (cellSize * 30), 0, -cellPosY * (cellSize * 30));
             Debug.Log("Node ID: " + spawnedNodes[i].id + " --- Rotation amount = " + basicRoomData.Item1);
             Quaternion roomRotation = Quaternion.Euler(0, basicRoomData.Item1, 0);
 
-            //=================================================================================
-            //                         Handles initial room content (based on room type)
-            //=================================================================================
-
-
-
             //TODO move this Instantiation til a later point so all room features are instantiated at the same time?
             //TODO if I do this, store the instantiation data in the node, as otherwise the physical position and rotation will be lost after this current loop
             GameObject newRoom = Instantiate(basicRoomData.Item2, roomPhysicalPosition, roomRotation);
 
-            GameObject initialRoomContentPrefab;
-            SO_RoomType roomTypeObject;
-            if (allRoomTypes.enumToObjectDict.TryGetValue(spawnedNodes[i].roomType, out roomTypeObject))
-            {
-                initialRoomContentPrefab = roomTypeObject.baseRoomPrefab;
-                // If the room has any feature prefabs that can be shared add it to a list that can be looped through later to spread those prefabs
-                if (roomTypeObject.featurePrefabs.Count > 0) { featureOriginNodes.Add(spawnedNodes[i]); }
-
-                GameObject newRoomTypeContent = Instantiate(initialRoomContentPrefab, roomPhysicalPosition, roomRotation);
-            }
-
+            GameObject initialRoomContentPrefab = spawnedNodes[i].roomType.baseRoomPrefab;
+            GameObject newRoomTypeContent = Instantiate(initialRoomContentPrefab, roomPhysicalPosition, roomRotation);
+            newRoomTypeContent.gameObject.transform.SetParent(newRoom.transform);
 
             // Debugging text
             GameObject newRoomInfo = Instantiate(roomInfoPrefab, roomPhysicalPosition, roomRotation);
@@ -249,14 +247,11 @@ public class New_MapManager : MonoBehaviour
         // Loops through all the stored nodes that have possible features to be spread to nearby rooms
         for (int i = 0; i < featureOriginNodes.Count; i++)
         {
-            // SO_RoomType roomTypeObject;
-            // if (allRoomTypes.enumToObjectDict.TryGetValue(featureOriginNodes[i].roomType, out roomTypeObject))
-            // {
-            //     int featureCount = roomTypeObject.featurePrefabs.Count;
-            // }
-
-            // featureOriginNodes[i].roomType.featurePrefabs.Count
-            // for (int j = 0; j < )
+            List<SO_RoomFeature> featureList = featureOriginNodes[i].roomType.featurePrefabs;
+            for (int j = 0; j < featureList.Count; j++)
+            {
+                SpreadFeature(featureOriginNodes[i], featureList[j]);
+            }
         }
     }
 
@@ -310,10 +305,11 @@ public class New_MapManager : MonoBehaviour
         Vector2 position = new Vector2(cellPos.x * cellSize, -cellPos.y * cellSize);
         GameObject newRoomObj = Instantiate(newRoom, position, Quaternion.identity);
 
+        Node newNode = nodeGraph.AddNode(cellPos);
+
         //TODO remove this text section once debugging is finished
         TMP_Text cellText = newRoomObj.gameObject.transform.GetChild(0).GetComponent<TMP_Text>();
-
-        Node newNode = nodeGraph.AddNode(cellPos);
+        cellText.SetText("ID: " + newNode.id);
 
         for (int i = 0; i < spawnedNodes.Count; i++)
         {
@@ -326,24 +322,21 @@ public class New_MapManager : MonoBehaviour
             }
         }
 
-        //TODO add whatever direction this new cell is in, into a list of occupied cardinal directions in the node, for room rotation needs.
-
+        //TODO rename this, as it's just a simplified map view
         newNode.directionalRoomPrefab = newRoomObj;
-
-        //TODO check if an edge weight is needed
-        int EDGE_WEIGHT = 1;
 
         // Replaces the "1" used in previous function that was used to show the cell was occupied, with the int id of the Node/Cell
         mapArray[cellPos.x, cellPos.y] = newNode.id;
-
-        cellText.SetText("ID: " + newNode.id);
 
         spawnedNodes.Add(newNode);
 
     }
 
-    private void SpreadFeature(SO_RoomFeature roomFeature)
+    private void SpreadFeature(Node rootNode, SO_RoomFeature roomFeature)
     {
+        List<int> visitedIDs = new List<int>();
+        Queue<int> nextToVisit = new Queue<int>();
 
+        //nextToVisit.Enqueue()
     }
 }

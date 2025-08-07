@@ -12,5 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef9b760371c397e41a054b4962773bd4, type: 3}
   m_Name: RoomTypeContainer
   m_EditorClassIdentifier: 
-  totalRoomTypes:
+  initialRoomTypes:
   - {fileID: 11400000, guid: fdd14f00b11a828408dfd63dad5f8846, type: 2}
+  alteredRoomTypes: []

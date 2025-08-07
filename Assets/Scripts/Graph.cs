@@ -12,6 +12,7 @@ public class Graph
     public List<Node> totalNodeList;
     private int idIncrementer;
     private SO_MapGenerationValues genValues;
+    public int?[,] adjMatrix { get; set; }
 
     public Graph(int initialNodeID, Vector2Int initialNodePos, SO_MapGenerationValues genValues)
     {
@@ -49,7 +50,8 @@ public class Graph
     // use nullable values to fill in empty squares
     public int?[,] CreateAdjacencyMatrix()
     {
-        int?[,] adjMatrix = new int?[totalNodeList.Count, totalNodeList.Count];
+        //int?[,] adjMatrix = new int?[totalNodeList.Count, totalNodeList.Count];
+        adjMatrix = new int?[totalNodeList.Count, totalNodeList.Count];
 
         for (int i = 0; i < totalNodeList.Count; i++)
         {
