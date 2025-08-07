@@ -29,6 +29,8 @@ public class New_MapManager : MonoBehaviour
     public int initialCellX = 5;
     public int initialCellY = 6;
 
+    // Stores a list of nodes hat contain features that can spread to nearby rooms so they can be revisited after complete map creation
+    private List<Node> featureOriginNodes;
 
     [SerializeField] SO_MapGenerationValues mapGenValues;
     [SerializeField] SO_RoomTypeContainer allRoomTypes;
@@ -158,7 +160,7 @@ public class New_MapManager : MonoBehaviour
             return;
         }
 
-        Debug.Log("Finished Physical Map Gen");
+        Debug.Log("Finished Initial Physical Map Gen");
         Debug.Log("End Room Number: " + endRooms.Count);
         nodeGraph.CreateAdjacencyMatrix();
 
@@ -169,8 +171,9 @@ public class New_MapManager : MonoBehaviour
         int numOfRoomTypes = Enum.GetNames(typeof(E_RoomTypes)).Length;
 
         //TODO figure out if to turn "4" into a const up top to avoid magic numbers
-            // N/E/S/W
-            int[] occupiedCardinalDirections = new int[4];
+        //TODO move this to a seperate function?
+        // N/E/S/W
+        int[] occupiedCardinalDirections = new int[4];
         // Loops through all nodes regardless of their relation to each other
         for (int i = 0; i < spawnedNodes.Count; i++)
         {
@@ -205,7 +208,7 @@ public class New_MapManager : MonoBehaviour
             //                         Handles initial room content (based on room type)
             //=================================================================================
 
-           
+
 
             //TODO move this Instantiation til a later point so all room features are instantiated at the same time?
             //TODO if I do this, store the instantiation data in the node, as otherwise the physical position and rotation will be lost after this current loop
@@ -216,6 +219,9 @@ public class New_MapManager : MonoBehaviour
             if (allRoomTypes.enumToObjectDict.TryGetValue(spawnedNodes[i].roomType, out roomType))
             {
                 initialRoomContentPrefab = roomType.baseRoomPrefab;
+                // If the room has any feature prefabs that can be shared add it to a list that can be looped through later to spread those prefabs
+                if (roomType.featurePrefabs.Count > 0) { featureOriginNodes.Add(spawnedNodes[i]); }
+
                 GameObject newRoomTypeContent = Instantiate(initialRoomContentPrefab, roomPhysicalPosition, roomRotation);
             }
 
@@ -227,9 +233,12 @@ public class New_MapManager : MonoBehaviour
             newRoomInfo.gameObject.transform.SetParent(newRoom.transform);
             newRoomInfo.transform.Translate(0.0f, -1.0f, 0.0f, Space.Self);
             newRoomInfo.transform.Rotate(-90.0f, 0.0f, 180.0f, Space.Self);
-            
+
             spawnedRooms.Add(newRoom);
         }
+
+        //TODO do graph rewriting here, moving prefab spawning til later
+        //TODO feature spreading by looping through featureOriginNodes
     }
 
     int GetRandomEndRoom()

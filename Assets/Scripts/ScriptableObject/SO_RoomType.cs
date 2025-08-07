@@ -21,5 +21,5 @@ public class SO_RoomType : ScriptableObject
 
     // If another room is near this one, give it one/multiple of these prefabs
     [Header("Context Provided Features")]
-    [SerializeField] List<GameObject> featurePrefabs;
+    [SerializeField] public List<SO_RoomFeature> featurePrefabs;
 }
