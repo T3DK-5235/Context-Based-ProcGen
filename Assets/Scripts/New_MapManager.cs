@@ -49,6 +49,8 @@ public class New_MapManager : MonoBehaviour
         spawnedNodes = new List<Node>();
         spawnedRooms = new List<GameObject>();
 
+        featureOriginNodes = new List<Node>();
+
         nodeGraph = new Graph(0, new Vector2Int(initialCellX, initialCellY), mapGenValues);
 
         allRoomTypes.LinkEnumToObject();
@@ -88,6 +90,7 @@ public class New_MapManager : MonoBehaviour
         endRooms = new List<Vector2Int>();
 
         Vector2Int initialPosition = new Vector2Int(initialCellX, initialCellY);
+
         VisitCell(initialPosition, initialPosition, E_CardinalDirections.NONE);
 
         GenerateMap();
@@ -197,9 +200,10 @@ public class New_MapManager : MonoBehaviour
             E_RoomTypes chosenRoomType = (E_RoomTypes)UnityEngine.Random.Range(0, numOfRoomTypes);
             spawnedNodes[i].roomType = chosenRoomType;
 
-            // Returns rotation and basic room outer structure (a prefab with the correct number of doors, currently only one of each type exists)
-            (int, GameObject) basicRoomData = spawnedNodes[i].SetupBasicRoom(GetNeighbourCount(spawnedNodes[i].gridPos.x, spawnedNodes[i].gridPos.y));
+            // Prompts node to store rotation and basic room outer structure (a prefab with the correct number of doors, currently only one of each type exists)
+            spawnedNodes[i].SetupBasicRoom(GetNeighbourCount(spawnedNodes[i].gridPos.x, spawnedNodes[i].gridPos.y));
 
+            (int, GameObject) basicRoomData = spawnedNodes[i].basicRoomData;
             Vector3 roomPhysicalPosition = new Vector3(cellPosX * (cellSize * 30), 0, -cellPosY * (cellSize * 30));
             Debug.Log("Node ID: " + spawnedNodes[i].id + " --- Rotation amount = " + basicRoomData.Item1);
             Quaternion roomRotation = Quaternion.Euler(0, basicRoomData.Item1, 0);
@@ -215,12 +219,12 @@ public class New_MapManager : MonoBehaviour
             GameObject newRoom = Instantiate(basicRoomData.Item2, roomPhysicalPosition, roomRotation);
 
             GameObject initialRoomContentPrefab;
-            SO_RoomType roomType;
-            if (allRoomTypes.enumToObjectDict.TryGetValue(spawnedNodes[i].roomType, out roomType))
+            SO_RoomType roomTypeObject;
+            if (allRoomTypes.enumToObjectDict.TryGetValue(spawnedNodes[i].roomType, out roomTypeObject))
             {
-                initialRoomContentPrefab = roomType.baseRoomPrefab;
+                initialRoomContentPrefab = roomTypeObject.baseRoomPrefab;
                 // If the room has any feature prefabs that can be shared add it to a list that can be looped through later to spread those prefabs
-                if (roomType.featurePrefabs.Count > 0) { featureOriginNodes.Add(spawnedNodes[i]); }
+                if (roomTypeObject.featurePrefabs.Count > 0) { featureOriginNodes.Add(spawnedNodes[i]); }
 
                 GameObject newRoomTypeContent = Instantiate(initialRoomContentPrefab, roomPhysicalPosition, roomRotation);
             }
@@ -237,8 +241,23 @@ public class New_MapManager : MonoBehaviour
             spawnedRooms.Add(newRoom);
         }
 
+        Debug.Log("Number of origin nodes: " + featureOriginNodes.Count);
+
         //TODO do graph rewriting here, moving prefab spawning til later
         //TODO feature spreading by looping through featureOriginNodes
+
+        // Loops through all the stored nodes that have possible features to be spread to nearby rooms
+        for (int i = 0; i < featureOriginNodes.Count; i++)
+        {
+            // SO_RoomType roomTypeObject;
+            // if (allRoomTypes.enumToObjectDict.TryGetValue(featureOriginNodes[i].roomType, out roomTypeObject))
+            // {
+            //     int featureCount = roomTypeObject.featurePrefabs.Count;
+            // }
+
+            // featureOriginNodes[i].roomType.featurePrefabs.Count
+            // for (int j = 0; j < )
+        }
     }
 
     int GetRandomEndRoom()
@@ -320,6 +339,11 @@ public class New_MapManager : MonoBehaviour
         cellText.SetText("ID: " + newNode.id);
 
         spawnedNodes.Add(newNode);
+
+    }
+
+    private void SpreadFeature(SO_RoomFeature roomFeature)
+    {
 
     }
 }

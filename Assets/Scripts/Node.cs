@@ -32,6 +32,7 @@ public class Node
     //TODO need to pass this in from MapManager
     private SO_MapGenerationValues genValues;
 
+    public (int, GameObject) basicRoomData;
     // 
     // private SO_RoomType relevantRoomType;
     // // The current tags for the room
@@ -83,14 +84,7 @@ public class Node
         this.occupiedCardinalDirections = occupiedDirection;
     }
 
-    //TODO check if I need to pass in neighbour count vs checking length of connections list
-    public (int, GameObject) SetupBasicRoom(int neighbourCount)
-    {
-        return CheckBasicRoomRotation(neighbourCount);
-        // TODO have method for spawning in room prefabs as well
-    }
-
-    private (int, GameObject) CheckBasicRoomRotation(int neighbourCount)
+    public void SetupBasicRoom(int neighbourCount)
     {
         int rotationDegree = 0;
         GameObject relevantPrefab = null;
@@ -155,7 +149,7 @@ public class Node
                 relevantPrefab = genValues.basicCrossJunction;
                 break;
         }
-        return (rotationDegree, relevantPrefab);
+        basicRoomData = (rotationDegree, relevantPrefab);
     }
 
     //public List<Connection> GetConnections() { return connections; }
