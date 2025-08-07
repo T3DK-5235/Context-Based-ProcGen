@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using System;
+using Unity.VisualScripting;
 
 
 public class New_MapManager : MonoBehaviour
@@ -158,6 +159,7 @@ public class New_MapManager : MonoBehaviour
         //TODO feature spreading by looping through featureOriginNodes
         //TODO move this to its own function
         // Loops through all the stored nodes that have possible features to be spread to nearby rooms
+        Debug.Log("Origin Nodes Count: " + featureOriginNodes.Count);
         for (int i = 0; i < featureOriginNodes.Count; i++)
         {
             List<SO_RoomFeature> featureList = featureOriginNodes[i].roomType.featurePrefabs;
@@ -216,6 +218,7 @@ public class New_MapManager : MonoBehaviour
 
         for (int i = 0; i < spawnedNodes.Count; i++)
         {
+            Node nodeToBuild = spawnedNodes[i];
             int cellPosX = spawnedNodes[i].gridPos.x;
             int cellPosY = spawnedNodes[i].gridPos.y;
 
@@ -228,9 +231,15 @@ public class New_MapManager : MonoBehaviour
             //TODO if I do this, store the instantiation data in the node, as otherwise the physical position and rotation will be lost after this current loop
             GameObject newRoom = Instantiate(basicRoomData.Item2, roomPhysicalPosition, roomRotation);
 
-            GameObject initialRoomContentPrefab = spawnedNodes[i].roomType.baseRoomPrefab;
-            GameObject newRoomTypeContent = Instantiate(initialRoomContentPrefab, roomPhysicalPosition, roomRotation);
+            GameObject newRoomTypeContent = Instantiate(spawnedNodes[i].roomType.baseRoomPrefab, roomPhysicalPosition, roomRotation);
             newRoomTypeContent.gameObject.transform.SetParent(newRoom.transform);
+
+            // Loop through all of the extra prefabs to spawn
+            for (int j = 0; j < spawnedNodes[i].relevantRoomPrefabs.Count; j++)
+            {
+                GameObject extraRoomPrefab = Instantiate(spawnedNodes[i].relevantRoomPrefabs[j], roomPhysicalPosition, roomRotation);
+                extraRoomPrefab.gameObject.transform.SetParent(newRoom.transform);
+            }
 
             // Debugging text
             GameObject newRoomInfo = Instantiate(roomInfoPrefab, roomPhysicalPosition, roomRotation);
@@ -238,7 +247,9 @@ public class New_MapManager : MonoBehaviour
             roomInfo.SetText("ID: " + spawnedNodes[i].id + " --- RoomType: " + spawnedNodes[i].roomType);
             newRoomInfo.gameObject.transform.SetParent(newRoom.transform);
             newRoomInfo.transform.Translate(0.0f, -1.0f, 0.0f, Space.Self);
-            newRoomInfo.transform.Rotate(-90.0f, 0.0f, 180.0f, Space.Self);
+
+            //newRoomInfo.transform.Rotate(-90, 0.0f, 180.0f, Space.Self);
+            newRoomInfo.transform.rotation = Quaternion.LookRotation(new Vector3(0,1,0));
 
             spawnedRooms.Add(newRoom);
         }
@@ -291,11 +302,106 @@ public class New_MapManager : MonoBehaviour
         mapArray[newNode.gridPos.x, newNode.gridPos.y] = newNode.id;
     }
 
+    // Based on a breadth first search, so changes evenly radiate out from a room
     private void SpreadFeature(Node rootNode, SO_RoomFeature roomFeature)
     {
-        List<int> visitedIDs = new List<int>();
-        Queue<int> nextToVisit = new Queue<int>();
+        int?[,] adjMatrix = nodeGraph.adjMatrix;
+        List<Node> totalNodeList = nodeGraph.totalNodeList;
 
-        //nextToVisit.Enqueue()
+        List<Node> visitedNodes = new List<Node>();
+        Queue<Node> nextToVisit = new Queue<Node>();
+
+        visitedNodes.Clear();
+        nextToVisit.Clear();
+
+        nextToVisit.Enqueue(rootNode);
+
+        // while (nextToVisit.Count > 0)
+        // {
+        //     Node visitingNode = nextToVisit.Dequeue();
+
+        //     // If the node has not been visited or if the node already has the relevant feature prefab
+        //     if (!visitedNodes.Contains(visitingNode) || visitingNode.relevantRoomPrefabs.Contains(roomFeature.featurePrefab))
+        //     {
+        //         //TODO have chance of spawning feature in that node
+        //         // Generate a percentage value
+        //         int prefabSpawnChance = UnityEngine.Random.Range(0, 100);
+        //         if (roomFeature.linkChance <= prefabSpawnChance)
+        //         {
+        //             visitingNode.relevantRoomPrefabs.Add(roomFeature.featurePrefab);
+        //         }
+
+        //         // Add neighbours to the queue by checking that node's column in the adjacency matrix
+        //         Debug.Log("adjMatrix depth: " + adjMatrix.GetLength(1));
+        //         for (int i = 0; i < adjMatrix.GetLength(1) - 1; i++)
+        //         {
+        //             Debug.Log("visiting Node ID: " + visitingNode.id);
+        //             // If there is a connection found, and the connection is not to itself
+        //             if ((adjMatrix[visitingNode.id - 1, i] != null || adjMatrix[visitingNode.id - 1, i] != 0)
+        //             && visitingNode.id != i)
+        //             {
+        //                 Debug.Log("Connected Node index" + totalNodeList[i]);
+        //                 nextToVisit.Enqueue(totalNodeList[i]);
+        //             }
+        //         }
+        //     }
+        // }
+
+        //for (int i = 0; i < 10; i++)
+        while (nextToVisit.Count > 0)
+        {
+
+            Node visitingNode = nextToVisit.Dequeue();
+            List<Connection> nodeNeighbours = visitingNode.connections;
+
+            Debug.Log("Got here with node ID: " + visitingNode.id);
+
+            if (visitedNodes.Contains(visitingNode) == false || visitingNode.relevantRoomPrefabs.Contains(roomFeature.featurePrefab))
+            {
+                visitedNodes.Add(visitingNode);
+                //TODO have chance of spawning feature in that node
+                // Generate a percentage value
+                //int prefabSpawnChance = UnityEngine.Random.Range(0, 100);
+                int prefabSpawnChance = 90; //for testing currently
+                //TODO improve bandage fix of preventing same prefab from spawning. Maybe return the visitedNodes and prefab type so it can be reused?
+                if (roomFeature.linkChance <= prefabSpawnChance && !visitingNode.relevantRoomPrefabs.Contains(roomFeature.featurePrefab))
+                {
+                    visitingNode.relevantRoomPrefabs.Add(roomFeature.featurePrefab);
+                }
+
+                // Add neighbours to the queue by checking that node's column in the adjacency matrix
+                // Debug.Log("adjMatrix depth: " + adjMatrix.GetLength(1));
+                // for (int j = 1; j < adjMatrix.GetLength(1); j++)
+                // {
+                //     Debug.Log("current Node ID: " + visitingNode.id + " and j is: " + j + " --- Value at [node_id, i] position is: " + adjMatrix[visitingNode.id, j]);
+                //     // If there is a connection found, and the connection is not to itself
+                //     if (adjMatrix[visitingNode.id, j] != null || adjMatrix[visitingNode.id, j] != 0)
+                //     {
+                //         Debug.Log("Next node to visit" + totalNodeList[j].id);
+                //         if (visitingNode.id != j) { nextToVisit.Enqueue(totalNodeList[j]); }
+                //     }
+                // }
+
+                Debug.Log("Node ID: " + visitingNode.id + " --- Neighbour Count: " + nodeNeighbours.Count);
+                for (int j = 0; j < nodeNeighbours.Count; j++)
+                {
+                    if (visitedNodes.Contains(nodeNeighbours[j].child) == false)
+                    {
+                        Debug.Log("Child Node ID: " + nodeNeighbours[j].child.id);
+                        nextToVisit.Enqueue(nodeNeighbours[j].child);
+                    }
+                }
+            }
+        }
+
+        string remainingNodes = "";
+        for (int x = 0; x < nextToVisit.Count; x++)
+        {
+            Node nextUp = nextToVisit.Peek();
+            remainingNodes += ", " + nextUp.id;
+            nextToVisit.Dequeue();
+        }
+        Debug.Log("The remaining nodes are: " + remainingNodes);
+
     }
 }

@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   initialRoomTypes:
   - {fileID: 11400000, guid: fdd14f00b11a828408dfd63dad5f8846, type: 2}
+  - {fileID: 11400000, guid: 426d1c7185e2e634a80ab5b551d9ba90, type: 2}
+  - {fileID: 11400000, guid: 91c316a6d58738d489770129f3c6af6b, type: 2}
+  - {fileID: 11400000, guid: 256cc2cd736429a498937fa615ddf057, type: 2}
+  - {fileID: 11400000, guid: 88183111259b83642bc8c549134005d9, type: 2}
   alteredRoomTypes: []

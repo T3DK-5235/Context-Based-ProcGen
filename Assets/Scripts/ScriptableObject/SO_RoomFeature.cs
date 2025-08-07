@@ -6,10 +6,10 @@ using UnityEngine;
 public class SO_RoomFeature : ScriptableObject
 {
     [Header("Feature Object")]
-    [SerializeField] GameObject featurePrefab;
+    [SerializeField] public GameObject featurePrefab;
 
     // The maximum distance away from the source room the feature will spread
-    [SerializeField] int linkMaxDistance = 3;
+    [SerializeField] public int linkMaxDistance = 3;
     // Percentage chance out of 100 to spread
-    [SerializeField] int linkChance = 50;
+    [SerializeField] public int linkChance = 50;
 }

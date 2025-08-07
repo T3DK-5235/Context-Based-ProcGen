@@ -41,7 +41,7 @@ public class Node
     // List<GameObject> relevantRoomTags { get; set; }
 
     public SO_RoomType roomType { get; set; }
-    List<GameObject> relevantRoomPrefabs { get; set; }
+    public List<GameObject> relevantRoomPrefabs { get; set; }
 
     // Room Orientation Handling 
     // Dead End
@@ -60,6 +60,7 @@ public class Node
         connections = new List<Connection>();
         // N/E/S/W
         occupiedCardinalDirections = new int[4];
+        relevantRoomPrefabs = new List<GameObject>();
     }
 
     public Node AddConnection(Node childNode)
