@@ -6,14 +6,17 @@ public class SO_GraphGrammar : ScriptableObject
 {
     [Header("Pattern to look for")]
     [SerializeField] public List<SO_RoomType> relevantGrammarPattern;
+    public List<int> relevantGrammarPatternIDs;
+
+    //TODO this section is not yet implemented
     [Header("For replacing an existing node")]
     // Whether the result from the grammar replaces 
-    [SerializeField] bool replace;
+    [SerializeField] public bool replace;
     // Which of the nodes to replace
-    [SerializeField] SO_RoomType replaceType;
+    [SerializeField] public SO_RoomType replaceType;
 
     [Header("Grammar Result")]
-    [SerializeField] GameObject resultantPrefab;
+    [SerializeField] public SO_RoomType resultantRoomType;
     
 
 }

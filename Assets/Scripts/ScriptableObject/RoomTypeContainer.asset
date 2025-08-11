@@ -18,4 +18,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 91c316a6d58738d489770129f3c6af6b, type: 2}
   - {fileID: 11400000, guid: 256cc2cd736429a498937fa615ddf057, type: 2}
   - {fileID: 11400000, guid: 88183111259b83642bc8c549134005d9, type: 2}
-  alteredRoomTypes: []
+  alteredRoomTypes:
+  - {fileID: 11400000, guid: 7c554ea2db817fe4488759491f1c330c, type: 2}

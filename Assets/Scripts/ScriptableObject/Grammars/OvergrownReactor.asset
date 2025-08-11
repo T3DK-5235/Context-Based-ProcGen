@@ -15,6 +15,7 @@ MonoBehaviour:
   relevantGrammarPattern:
   - {fileID: 11400000, guid: fdd14f00b11a828408dfd63dad5f8846, type: 2}
   - {fileID: 11400000, guid: 91c316a6d58738d489770129f3c6af6b, type: 2}
+  relevantGrammarPatternIDs: 0000000002000000
   replace: 1
   replaceType: {fileID: 11400000, guid: fdd14f00b11a828408dfd63dad5f8846, type: 2}
-  resultantPrefab: {fileID: 919132149155446097, guid: e78b2783ea09bd344b0809d56adc34af, type: 3}
+  resultantRoomType: {fileID: 11400000, guid: 7c554ea2db817fe4488759491f1c330c, type: 2}

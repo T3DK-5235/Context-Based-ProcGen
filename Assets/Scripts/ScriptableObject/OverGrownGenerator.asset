@@ -10,13 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5039dfb911f204e41a7581713100a3e4, type: 3}
-  m_Name: GeneratorRoom
+  m_Name: OverGrownGenerator
   m_EditorClassIdentifier: 
   roomType: 1
-  tagID: 0
+  tagID: 5
   roomPriority: 1
   maxInstances: 1
-  baseRoomPrefab: {fileID: 919132149155446097, guid: 9ecbb93520d0d8e448e1019c116d6691, type: 3}
+  baseRoomPrefab: {fileID: 919132149155446097, guid: e78b2783ea09bd344b0809d56adc34af, type: 3}
   isEndRoom: 0
-  featurePrefabs:
-  - {fileID: 11400000, guid: ee44eb470b554b94db671cf88e2a5bda, type: 2}
+  featurePrefabs: []

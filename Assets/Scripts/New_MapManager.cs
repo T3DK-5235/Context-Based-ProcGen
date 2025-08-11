@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using System;
 using Unity.VisualScripting;
@@ -44,6 +45,8 @@ public class New_MapManager : MonoBehaviour
     // A tempt object for visually showing info when debugging
     [SerializeField] GameObject roomInfoPrefab;
 
+    private int generationAttempts;
+
     void Start()
     {
         minNodes = 16;
@@ -57,6 +60,8 @@ public class New_MapManager : MonoBehaviour
         featureOriginNodes = new List<Node>();
 
         nodeGraph = new Graph(0, new Vector2Int(initialCellX, initialCellY), mapGenValues);
+
+        generationAttempts = 0;
 
         int idIncrementer = 0;
         idIncrementer = allRoomTypes.AllocateTagIDs(idIncrementer);
@@ -109,7 +114,7 @@ public class New_MapManager : MonoBehaviour
 
     void GenerateMap()
     {
-
+        generationAttempts++;
         while (nodeQueue.Count > 0)
         {
             Node previousNode = nodeQueue.Dequeue();
@@ -178,6 +183,8 @@ public class New_MapManager : MonoBehaviour
         }
 
         BuildRoom();
+
+        Debug.Log("Total Generation Attempts: " + generationAttempts);
     }
 
     private void SetupBasicRoomInfo()
@@ -393,6 +400,7 @@ public class New_MapManager : MonoBehaviour
             Node visitingNode = nextToVisit.Pop();
             //Debug.Log("Popped Visiting Node: " + visitingNode.id);
 
+            //! using the connections may break, as connections back to it from the child are also stored
             List<Connection> nodeNeighbours = visitingNode.connections;
 
             if (visitedNodes.Contains(visitingNode) == false)
@@ -401,33 +409,97 @@ public class New_MapManager : MonoBehaviour
 
                 // Currently unused, but a chance for each grammar to apply could be added later
                 // int grammarApplicationChance = UnityEngine.Random.Range(0, 100);
-                
+
                 List<int> nodePattern = new List<int>();
+                nodePattern.Clear();
                 nodePattern.Add(visitingNode.roomType.tagID);
-                
+
                 for (int i = 0; i < nodeNeighbours.Count; i++)
                 {
                     //TODO either loop through all graph grammars here to check which one is linked.
 
-                    // The first element is the current node, so that shouldn't be removed, 
-                    // but the child of the node changes as we loop, so the rest of the list should be cleared
-                    // Remove range is used to allow multiple children to be stored which could be expanded upon in the future
-                    // Currently though, the setup of this DFS would only really allow grammars with two elements
-                    nodePattern.RemoveRange(1, nodePattern.Count - 1);
-                    // Add the id of the roomtype of the child to the nodePattern to compare to the grammars
-                    nodePattern.Add(nodeNeighbours[i].child.roomType.tagID);
+                    // // The first element is the current node, so that shouldn't be removed, 
+                    // // but the child of the node changes as we loop, so the rest of the list should be cleared
+                    // // Remove range is used to allow multiple children to be stored which could be expanded upon in the future
+                    // // Currently though, the setup of this DFS would only really allow grammars with two elements
+                    // nodePattern.RemoveRange(1, nodePattern.Count - 1);
+                    // // Add the id of the roomtype of the child to the nodePattern to compare to the grammars
+                    // nodePattern.Add(nodeNeighbours[i].child.roomType.tagID);
 
+                    // //! Sorting it screwed with the Remove range above! Maybe can create a new List that is sorted
+                    // nodePattern.Sort();
+
+                    // List<int> sortedNodePattern = new List<int>();
+                    // sortedNodePattern.AddRange(nodePattern);
+                    // sortedNodePattern.Sort();
+
+                    nodePattern.Clear();
+                    nodePattern.Add(visitingNode.roomType.tagID);
+                    nodePattern.Add(nodeNeighbours[i].child.roomType.tagID);
                     nodePattern.Sort();
 
-                    string nodePatternString = "NodePattern: ";
-                    for (int d = 0; d < nodePattern.Count; d++) { nodePatternString += nodePattern[d] + "."; }
-                    Debug.Log(nodePatternString);
+                    // List<Node> nodeReferenceList = new List<Node>() {visitingNode, nodeNeighbours[i].child};
+                    // string nodePatternString = "NodePattern: ";
+                    // for (int d = 0; d < nodePattern.Count; d++) { nodePatternString += nodePattern[d] + "."; }
+                    // Debug.Log(nodePatternString);
 
-                    SO_GraphGrammar relevantGrammar;
-                    if (allGrammars.patternGrammarLink.TryGetValue(nodePattern, out relevantGrammar))
+                    //SO_GraphGrammar foundGrammar = null;
+
+                    List<SO_GraphGrammar> potentialGrammars;
+                    // Search for the smallest tagID value found from the nodes in the pattern
+                    // For tagIDs 4,2,1,6, it will try find the tagID 1 in the dict, then check if the remaining values are correct
+                    Debug.Log("Trying to get value: " + nodePattern[0]);
+                    if (allGrammars.patternGrammarLink.TryGetValue(nodePattern[0], out potentialGrammars))
                     {
-                        Debug.Log("Found Related Grammar");       
+                        Debug.Log("Got the value from the dict --- potentialGrammars.Count: " + potentialGrammars.Count);
+                        // // Starts at 1 as we know the first value is correct, as it's what we used as the value in the dict as a lookup
+                        // for (int j = 1; j < relevantGrammar.relevantGrammarPattern.Count; j++)
+                        // {
+                        //     if (relevantGrammar.relevantGrammarPattern[j] == nodePattern[j])
+                        //     {
+
+                        //     }
+                        // }
+                        // Debug.Log("Found Related Grammar");
+                        for (int j = 0; j < potentialGrammars.Count; j++)
+                        {
+                            //TODO remove debug log lines
+                            Debug.Log("Node IDs: 1:" + visitingNode.id + " --- 2: " + nodeNeighbours[i].child.id);
+
+                            Debug.Log("Grammar ID Counts: " + potentialGrammars[j].relevantGrammarPatternIDs.Count);
+                            string grammarIdString = "Grammar ID String: ";
+                            for (int d = 0; d < potentialGrammars[j].relevantGrammarPatternIDs.Count; d++)
+                            {
+                                grammarIdString += potentialGrammars[j].relevantGrammarPatternIDs[d] + ", ";
+                            }
+                            Debug.Log(grammarIdString);
+
+                            string nodePatternStrings = "nodePattern String: ";
+                            for (int d = 0; d < nodePattern.Count; d++) { nodePatternStrings += nodePattern[d] + ", "; }
+                            Debug.Log(nodePatternStrings);
+
+                            // if the pattern given by the nodes is equal to one of the patterns stored
+                            if (nodePattern.SequenceEqual(potentialGrammars[j].relevantGrammarPatternIDs))
+                            {
+                                //applicableGrammar = potentialGrammars[j];
+                                //TODO work on checking whether to replace existing node (and which node to replace), or adding a new node
+                                //visitingNode.roomType = potentialGrammars[j].resultantRoomType;
+
+                                Debug.Log("Visiting Node ID: " + visitingNode.id);
+                                List<Node> nodeList = new List<Node>() { visitingNode, nodeNeighbours[i].child };
+                                ApplyGrammar(nodeList, potentialGrammars[j]);
+                                Debug.Log("Found the grammar!");
+                                break;
+                            }
+                        }
+
                     }
+
+                    // if (foundGrammar != null)
+                    // {
+                    //     visitingNode.roomType = foundGrammar.resultantRoomType;
+                    // }
+
 
 
                     if (!visitedNodes.Contains(nodeNeighbours[i].child))
@@ -435,6 +507,33 @@ public class New_MapManager : MonoBehaviour
                         nextToVisit.Push(nodeNeighbours[i].child);
                     }
                 }
+            }
+        }
+    }
+
+    private void ApplyGrammar(List<Node> nodeReferenceList, SO_GraphGrammar relevantGrammar)
+    {
+        if (relevantGrammar.replace == true)
+        {
+            for (int i = 0; i < nodeReferenceList.Count; i++)
+            {
+                Debug.Log("Node initial Type: " + nodeReferenceList[i].roomType.tagID +
+                "--- Node expected Type: " + relevantGrammar.replaceType.tagID +
+                " --- Replacement Type: " + relevantGrammar.resultantRoomType.tagID +
+                "--- NodeReferenceList Size: " + nodeReferenceList.Count);
+
+                if (nodeReferenceList[i].roomType.tagID == relevantGrammar.replaceType.tagID)
+                {
+                    nodeReferenceList[i].roomType = relevantGrammar.resultantRoomType;
+                }
+
+                // // Nodes are stored at their ID's position in the total node list
+                // // If that Node's room's tagID is equal to the required one
+                // //TODO figure out if it's worth using a dict that stores Node IDs and the nodes themselves
+                // if (nodeGraph.totalNodeList[nodeReferenceList[i]].roomType.tagID == relevantGrammar.replaceType.tagID)
+                // {
+                //     nodeGraph.totalNodeList[nodeReferenceList[i]].roomType = relevantGrammar.resultantRoomType;
+                // }
             }
         }
     }

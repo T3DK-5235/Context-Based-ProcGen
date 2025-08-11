@@ -491,6 +491,7 @@ MonoBehaviour:
   initialCellY: 6
   mapGenValues: {fileID: 11400000, guid: a2e02609926259048978389df6714fb0, type: 2}
   allRoomTypes: {fileID: 11400000, guid: 9a88279dfcf39c34d8c2af41af267bc5, type: 2}
+  allGrammars: {fileID: 11400000, guid: 65d9a0d0a473e1d4d90a80664c0b5323, type: 2}
   newRoom: {fileID: 6959138989329572436, guid: b49e022ca84b25c4fa5ec0d1e1101985, type: 3}
   roomInfoPrefab: {fileID: 2567307292255548058, guid: 932f41dff2d104848abfaa4dbd56c0f1, type: 3}
 --- !u!1660057539 &9223372036854775807
