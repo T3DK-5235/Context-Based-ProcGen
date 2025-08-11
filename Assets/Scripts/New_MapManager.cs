@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using TMPro;
 using System;
 using Unity.VisualScripting;
+using System.ComponentModel.Design;
 
 
 public class New_MapManager : MonoBehaviour
@@ -36,6 +37,7 @@ public class New_MapManager : MonoBehaviour
 
     [SerializeField] SO_MapGenerationValues mapGenValues;
     [SerializeField] SO_RoomTypeContainer allRoomTypes;
+    [SerializeField] SO_GraphGrammarContainer allGrammars;
 
     //Currently stores 2d image placeholder for testing
     [SerializeField] GameObject newRoom;
@@ -55,6 +57,11 @@ public class New_MapManager : MonoBehaviour
         featureOriginNodes = new List<Node>();
 
         nodeGraph = new Graph(0, new Vector2Int(initialCellX, initialCellY), mapGenValues);
+
+        int idIncrementer = 0;
+        idIncrementer = allRoomTypes.AllocateTagIDs(idIncrementer);
+
+        allGrammars.CreateGrammarLookup();
 
         SetupMap();
     }
@@ -155,6 +162,7 @@ public class New_MapManager : MonoBehaviour
 
         //TODO do graph rewriting here, moving prefab spawning til later
 
+        CheckGrammars();
 
         //TODO feature spreading by looping through featureOriginNodes
         //TODO move this to its own function
@@ -249,7 +257,7 @@ public class New_MapManager : MonoBehaviour
             newRoomInfo.transform.Translate(0.0f, -1.0f, 0.0f, Space.Self);
 
             //newRoomInfo.transform.Rotate(-90, 0.0f, 180.0f, Space.Self);
-            newRoomInfo.transform.rotation = Quaternion.LookRotation(new Vector3(0,1,0));
+            newRoomInfo.transform.rotation = Quaternion.LookRotation(new Vector3(0, 1, 0));
 
             spawnedRooms.Add(newRoom);
         }
@@ -271,7 +279,7 @@ public class New_MapManager : MonoBehaviour
         {
             return false;
         }
-        
+
         Node newNode = nodeGraph.AddNode(newCellPos);
 
         nodeQueue.Enqueue(newNode);
@@ -303,10 +311,11 @@ public class New_MapManager : MonoBehaviour
     }
 
     // Based on a breadth first search, so changes evenly radiate out from a room
+    // in the future this could be used to make expansion less likely the further the away from origin node
     private void SpreadFeature(Node rootNode, SO_RoomFeature roomFeature)
     {
-        int?[,] adjMatrix = nodeGraph.adjMatrix;
-        List<Node> totalNodeList = nodeGraph.totalNodeList;
+        //int?[,] adjMatrix = nodeGraph.adjMatrix;
+        //List<Node> totalNodeList = nodeGraph.totalNodeList;
 
         List<Node> visitedNodes = new List<Node>();
         Queue<Node> nextToVisit = new Queue<Node>();
@@ -316,38 +325,6 @@ public class New_MapManager : MonoBehaviour
 
         nextToVisit.Enqueue(rootNode);
 
-        // while (nextToVisit.Count > 0)
-        // {
-        //     Node visitingNode = nextToVisit.Dequeue();
-
-        //     // If the node has not been visited or if the node already has the relevant feature prefab
-        //     if (!visitedNodes.Contains(visitingNode) || visitingNode.relevantRoomPrefabs.Contains(roomFeature.featurePrefab))
-        //     {
-        //         //TODO have chance of spawning feature in that node
-        //         // Generate a percentage value
-        //         int prefabSpawnChance = UnityEngine.Random.Range(0, 100);
-        //         if (roomFeature.linkChance <= prefabSpawnChance)
-        //         {
-        //             visitingNode.relevantRoomPrefabs.Add(roomFeature.featurePrefab);
-        //         }
-
-        //         // Add neighbours to the queue by checking that node's column in the adjacency matrix
-        //         Debug.Log("adjMatrix depth: " + adjMatrix.GetLength(1));
-        //         for (int i = 0; i < adjMatrix.GetLength(1) - 1; i++)
-        //         {
-        //             Debug.Log("visiting Node ID: " + visitingNode.id);
-        //             // If there is a connection found, and the connection is not to itself
-        //             if ((adjMatrix[visitingNode.id - 1, i] != null || adjMatrix[visitingNode.id - 1, i] != 0)
-        //             && visitingNode.id != i)
-        //             {
-        //                 Debug.Log("Connected Node index" + totalNodeList[i]);
-        //                 nextToVisit.Enqueue(totalNodeList[i]);
-        //             }
-        //         }
-        //     }
-        // }
-
-        //for (int i = 0; i < 10; i++)
         while (nextToVisit.Count > 0)
         {
 
@@ -356,52 +333,83 @@ public class New_MapManager : MonoBehaviour
 
             Debug.Log("Got here with node ID: " + visitingNode.id);
 
-            if (visitedNodes.Contains(visitingNode) == false || visitingNode.relevantRoomPrefabs.Contains(roomFeature.featurePrefab))
+            // If the room hasn't been visited AND the room doesnt already have the prefab 
+            //TODO improve bandage fix of preventing same prefab from spawning. Maybe return the visitedNodes and prefab type so it can be reused if needed?
+            if (!visitedNodes.Contains(visitingNode) && !visitingNode.relevantRoomPrefabs.Contains(roomFeature.featurePrefab))
             {
                 visitedNodes.Add(visitingNode);
                 //TODO have chance of spawning feature in that node
                 // Generate a percentage value
                 int prefabSpawnChance = UnityEngine.Random.Range(0, 100);
                 //Debug.Log("prefab spawn chance: " + roomFeature.linkChance + " --- " + "rolled chance: " + prefabSpawnChance);
-                //TODO improve bandage fix of preventing same prefab from spawning. Maybe return the visitedNodes and prefab type so it can be reused?
-                if (roomFeature.linkChance >= prefabSpawnChance && !visitingNode.relevantRoomPrefabs.Contains(roomFeature.featurePrefab))
+                if (roomFeature.linkChance >= prefabSpawnChance)
                 {
                     visitingNode.relevantRoomPrefabs.Add(roomFeature.featurePrefab);
 
                     Debug.Log("Node ID: " + visitingNode.id + " --- Neighbour Count: " + nodeNeighbours.Count);
                     for (int j = 0; j < nodeNeighbours.Count; j++)
                     {
-                        if (visitedNodes.Contains(nodeNeighbours[j].child) == false)
+                        //TODO figure out if theres a more efficient way of doing this
+                        //TODO this is caused by there being  both a connection from one node to another, and one in the opposite direction. This is currently used to figure out where doors need to be
+                        if (!visitedNodes.Contains(nodeNeighbours[j].child))
                         {
                             Debug.Log("Child Node ID: " + nodeNeighbours[j].child.id);
                             nextToVisit.Enqueue(nodeNeighbours[j].child);
                         }
                     }
                 }
-
-                // Add neighbours to the queue by checking that node's column in the adjacency matrix
-                // Debug.Log("adjMatrix depth: " + adjMatrix.GetLength(1));
-                // for (int j = 1; j < adjMatrix.GetLength(1); j++)
-                // {
-                //     Debug.Log("current Node ID: " + visitingNode.id + " and j is: " + j + " --- Value at [node_id, i] position is: " + adjMatrix[visitingNode.id, j]);
-                //     // If there is a connection found, and the connection is not to itself
-                //     if (adjMatrix[visitingNode.id, j] != null || adjMatrix[visitingNode.id, j] != 0)
-                //     {
-                //         Debug.Log("Next node to visit" + totalNodeList[j].id);
-                //         if (visitingNode.id != j) { nextToVisit.Enqueue(totalNodeList[j]); }
-                //     }
-                // }
             }
         }
 
-        string remainingNodes = "";
-        for (int x = 0; x < nextToVisit.Count; x++)
-        {
-            Node nextUp = nextToVisit.Peek();
-            remainingNodes += ", " + nextUp.id;
-            nextToVisit.Dequeue();
-        }
-        Debug.Log("The remaining nodes are: " + remainingNodes);
+        // string remainingNodes = "";
+        // for (int x = 0; x < nextToVisit.Count; x++)
+        // {
+        //     Node nextUp = nextToVisit.Peek();
+        //     remainingNodes += ", " + nextUp.id;
+        //     nextToVisit.Dequeue();
+        // }
+        // Debug.Log("The remaining nodes are: " + remainingNodes);
 
+    }
+
+
+    // Depth first search is used to look for grammar checking to look for long chains of rooms that head away from the rootnode
+    // This could allow easy integration with lock and key puzzles, or for making it more likely to create altered/unique rooms further from the entrance
+    private void CheckGrammars()
+    {
+        // Depth first search of graph to get all possible connections that exist in the graph
+        // // Whilst doing this, add connection types to a dictionary of (SO_RoomType,SO_RoomType) key to (Node, Node) value
+
+        List<Node> visitedNodes = new List<Node>();
+        Stack<Node> nextToVisit = new Stack<Node>();
+
+        visitedNodes.Clear();
+        nextToVisit.Clear();
+
+        nextToVisit.Push(nodeGraph.initialNode);
+
+        while (nextToVisit.Count > 0)
+        {
+            Node visitingNode = nextToVisit.Pop();
+            List<Connection> nodeNeighbours = visitingNode.connections;
+
+            if (visitedNodes.Contains(visitingNode) == false)
+            {
+                visitedNodes.Add(visitingNode);
+
+                // Currently unused, but a chance for each grammar could be added later
+                // int grammarApplicationChance = UnityEngine.Random.Range(0, 100);
+
+                for (int i = 0; i < nodeNeighbours.Count; i++)
+                {
+                    //TODO either loop through all graph grammars here to check which one is linked. 
+
+                    if (!visitedNodes.Contains(nodeNeighbours[i].child))
+                    {
+                        nextToVisit.Push(nodeNeighbours[i].child);
+                    }
+                }
+            }
+        }
     }
 }

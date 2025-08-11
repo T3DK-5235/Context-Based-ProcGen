@@ -7,7 +7,7 @@ using System;
 
 public class Graph
 {
-    public Node initialNode;
+    public Node initialNode { get; }
     //TODO check if a dict of total nodes would be better. Or an additional dict assigning an id, or the grid pos to the node
     public List<Node> totalNodeList { get; set; }
     private int idIncrementer;

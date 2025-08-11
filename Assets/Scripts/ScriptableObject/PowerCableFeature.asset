@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: PowerCableFeature
   m_EditorClassIdentifier: 
   featurePrefab: {fileID: 919132149155446097, guid: 1fcb290c271a3e74ca7b53653b47c55c, type: 3}
-  linkDistance: 0
-  linkChance: 75
+  linkMaxDistance: 3
+  linkChance: 65

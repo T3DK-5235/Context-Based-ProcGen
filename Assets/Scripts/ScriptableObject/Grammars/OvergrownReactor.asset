@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 858ffcd2f48e38b4eba4d29cd3d16c8c, type: 3}
+  m_Name: OvergrownReactor
+  m_EditorClassIdentifier: 
+  relevantGrammarPattern:
+  - {fileID: 11400000, guid: fdd14f00b11a828408dfd63dad5f8846, type: 2}
+  - {fileID: 11400000, guid: 91c316a6d58738d489770129f3c6af6b, type: 2}
+  replace: 1
+  replaceType: {fileID: 11400000, guid: fdd14f00b11a828408dfd63dad5f8846, type: 2}
+  resultantPrefab: {fileID: 0}
