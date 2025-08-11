@@ -13,13 +13,19 @@ public class SO_GraphGrammarContainer : ScriptableObject
     public void CreateGrammarLookup()
     {
         List<int> tagIDList = new List<int>();
+        patternGrammarLink = new Dictionary<List<int>, SO_GraphGrammar>();
+
         for (int i = 0; i < graphGrammarList.Count; i++)
         {
             // Gets the ids for the relevant tags used in the comparison to improve comparison and allow easy sorting with ints rather than scriptable objects
-            for (int j = 0; j < graphGrammarList[i].relevantGrammarPattern.Count; i++)
+            for (int j = 0; j < graphGrammarList[i].relevantGrammarPattern.Count; j++)
             {
                 tagIDList.Add(graphGrammarList[i].relevantGrammarPattern[j].tagID);
             }
+
+            string tagIDListValues = "IDs Found: ";
+            for (int d = 0; d < tagIDList.Count; d++) { tagIDListValues += tagIDList[d] + "."; }
+            Debug.Log(tagIDListValues);
 
             //Sorts the tags to be in ascending order, this will be compared to sorted tags to prevent issues where x after y is detected by y after x is not.
             tagIDList.Sort();

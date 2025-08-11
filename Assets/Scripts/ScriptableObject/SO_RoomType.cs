@@ -18,7 +18,7 @@ public class SO_RoomType : ScriptableObject
 
     [Header("Room Spawning")]
     // If the room can only spawn in a dead end room (not currently used)
-    [SerializeField] bool isEndRoom = false;
+    [SerializeField] public bool isEndRoom = false;
 
     // If another room is near this one, give it one/multiple of these prefabs
     [Header("Context Provided Features")]

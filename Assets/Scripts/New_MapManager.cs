@@ -331,7 +331,7 @@ public class New_MapManager : MonoBehaviour
             Node visitingNode = nextToVisit.Dequeue();
             List<Connection> nodeNeighbours = visitingNode.connections;
 
-            Debug.Log("Got here with node ID: " + visitingNode.id);
+            //Debug.Log("Got here with node ID: " + visitingNode.id);
 
             // If the room hasn't been visited AND the room doesnt already have the prefab 
             //TODO improve bandage fix of preventing same prefab from spawning. Maybe return the visitedNodes and prefab type so it can be reused if needed?
@@ -346,14 +346,14 @@ public class New_MapManager : MonoBehaviour
                 {
                     visitingNode.relevantRoomPrefabs.Add(roomFeature.featurePrefab);
 
-                    Debug.Log("Node ID: " + visitingNode.id + " --- Neighbour Count: " + nodeNeighbours.Count);
+                    //Debug.Log("Node ID: " + visitingNode.id + " --- Neighbour Count: " + nodeNeighbours.Count);
                     for (int j = 0; j < nodeNeighbours.Count; j++)
                     {
                         //TODO figure out if theres a more efficient way of doing this
                         //TODO this is caused by there being  both a connection from one node to another, and one in the opposite direction. This is currently used to figure out where doors need to be
                         if (!visitedNodes.Contains(nodeNeighbours[j].child))
                         {
-                            Debug.Log("Child Node ID: " + nodeNeighbours[j].child.id);
+                            //Debug.Log("Child Node ID: " + nodeNeighbours[j].child.id);
                             nextToVisit.Enqueue(nodeNeighbours[j].child);
                         }
                     }
@@ -386,23 +386,49 @@ public class New_MapManager : MonoBehaviour
         visitedNodes.Clear();
         nextToVisit.Clear();
 
-        nextToVisit.Push(nodeGraph.initialNode);
+        nextToVisit.Push(nodeGraph.totalNodeList[0]);
 
         while (nextToVisit.Count > 0)
         {
             Node visitingNode = nextToVisit.Pop();
+            //Debug.Log("Popped Visiting Node: " + visitingNode.id);
+
             List<Connection> nodeNeighbours = visitingNode.connections;
 
             if (visitedNodes.Contains(visitingNode) == false)
             {
                 visitedNodes.Add(visitingNode);
 
-                // Currently unused, but a chance for each grammar could be added later
+                // Currently unused, but a chance for each grammar to apply could be added later
                 // int grammarApplicationChance = UnityEngine.Random.Range(0, 100);
-
+                
+                List<int> nodePattern = new List<int>();
+                nodePattern.Add(visitingNode.roomType.tagID);
+                
                 for (int i = 0; i < nodeNeighbours.Count; i++)
                 {
-                    //TODO either loop through all graph grammars here to check which one is linked. 
+                    //TODO either loop through all graph grammars here to check which one is linked.
+
+                    // The first element is the current node, so that shouldn't be removed, 
+                    // but the child of the node changes as we loop, so the rest of the list should be cleared
+                    // Remove range is used to allow multiple children to be stored which could be expanded upon in the future
+                    // Currently though, the setup of this DFS would only really allow grammars with two elements
+                    nodePattern.RemoveRange(1, nodePattern.Count - 1);
+                    // Add the id of the roomtype of the child to the nodePattern to compare to the grammars
+                    nodePattern.Add(nodeNeighbours[i].child.roomType.tagID);
+
+                    nodePattern.Sort();
+
+                    string nodePatternString = "NodePattern: ";
+                    for (int d = 0; d < nodePattern.Count; d++) { nodePatternString += nodePattern[d] + "."; }
+                    Debug.Log(nodePatternString);
+
+                    SO_GraphGrammar relevantGrammar;
+                    if (allGrammars.patternGrammarLink.TryGetValue(nodePattern, out relevantGrammar))
+                    {
+                        Debug.Log("Found Related Grammar");       
+                    }
+
 
                     if (!visitedNodes.Contains(nodeNeighbours[i].child))
                     {

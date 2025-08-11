@@ -16,6 +16,7 @@ public class Graph
 
     public Graph(int initialNodeID, Vector2Int initialNodePos, SO_MapGenerationValues genValues)
     {
+        //TODO figure out what to do with initial node, cause currently it does absolutely nothing
         initialNode = new Node(initialNodeID, initialNodePos, genValues);
         totalNodeList = new List<Node>();
         // This value will increase whenever a new node is created.
