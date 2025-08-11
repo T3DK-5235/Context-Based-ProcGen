@@ -517,23 +517,23 @@ public class New_MapManager : MonoBehaviour
         {
             for (int i = 0; i < nodeReferenceList.Count; i++)
             {
-                Debug.Log("Node initial Type: " + nodeReferenceList[i].roomType.tagID +
-                "--- Node expected Type: " + relevantGrammar.replaceType.tagID +
-                " --- Replacement Type: " + relevantGrammar.resultantRoomType.tagID +
-                "--- NodeReferenceList Size: " + nodeReferenceList.Count);
+                // Debug.Log("Node initial Type: " + nodeReferenceList[i].roomType.tagID +
+                // "--- Node expected Type: " + relevantGrammar.replaceType.tagID +
+                // " --- Replacement Type: " + relevantGrammar.resultantRoomType.tagID +
+                // "--- NodeReferenceList Size: " + nodeReferenceList.Count);
 
                 if (nodeReferenceList[i].roomType.tagID == relevantGrammar.replaceType.tagID)
                 {
                     nodeReferenceList[i].roomType = relevantGrammar.resultantRoomType;
                 }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < nodeReferenceList.Count; i++)
+            {
 
-                // // Nodes are stored at their ID's position in the total node list
-                // // If that Node's room's tagID is equal to the required one
-                // //TODO figure out if it's worth using a dict that stores Node IDs and the nodes themselves
-                // if (nodeGraph.totalNodeList[nodeReferenceList[i]].roomType.tagID == relevantGrammar.replaceType.tagID)
-                // {
-                //     nodeGraph.totalNodeList[nodeReferenceList[i]].roomType = relevantGrammar.resultantRoomType;
-                // }
+                //TODO check the neighbours of each node and see if another room can be placed, if so place it with the new prefab as it's main
             }
         }
     }
