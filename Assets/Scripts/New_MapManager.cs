@@ -107,7 +107,7 @@ public class New_MapManager : MonoBehaviour
 
         Vector2Int initialPosition = new Vector2Int(initialCellX, initialCellY);
 
-        VisitCell(initialPosition, null, E_CardinalDirections.NONE);
+        VisitCell(initialPosition, null);
 
         GenerateMap();
     }
@@ -124,19 +124,19 @@ public class New_MapManager : MonoBehaviour
             // Cascades through the if statements and attempts to create new cells
             if (previousCellPos.x > 1)
             {
-                created |= VisitCell(new Vector2Int(previousCellPos.x - 1, previousCellPos.y), previousNode, E_CardinalDirections.NORTH);
+                created |= VisitCell(new Vector2Int(previousCellPos.x - 1, previousCellPos.y), previousNode);
             }
             if (previousCellPos.x < 8)
             {
-                created |= VisitCell(new Vector2Int(previousCellPos.x + 1, previousCellPos.y), previousNode, E_CardinalDirections.EAST);
+                created |= VisitCell(new Vector2Int(previousCellPos.x + 1, previousCellPos.y), previousNode);
             }
             if (previousCellPos.y > 2)
             {
-                created |= VisitCell(new Vector2Int(previousCellPos.x, previousCellPos.y - 1), previousNode, E_CardinalDirections.WEST);
+                created |= VisitCell(new Vector2Int(previousCellPos.x, previousCellPos.y - 1), previousNode);
             }
             if (previousCellPos.y < 7)
             {
-                created |= VisitCell(new Vector2Int(previousCellPos.x, previousCellPos.y + 1), previousNode, E_CardinalDirections.SOUTH);
+                created |= VisitCell(new Vector2Int(previousCellPos.x, previousCellPos.y + 1), previousNode);
             }
 
             // if a new cell is not created, add the existing index to the endrooms list
@@ -153,6 +153,7 @@ public class New_MapManager : MonoBehaviour
         {
             SetupMap();
             nodeGraph.ClearGraph();
+            nodeQueue.Clear();
             return;
         }
 
@@ -160,12 +161,18 @@ public class New_MapManager : MonoBehaviour
         //Debug.Log("End Room Number: " + endRooms.Count);
         nodeGraph.CreateAdjacencyMatrix();
 
-        SetupBasicRoomInfo();
 
 
-        //Debug.Log("Number of origin nodes: " + featureOriginNodes.Count);
-
-        //TODO do graph rewriting here, moving prefab spawning til later
+        List<Node> spawnedNodes = nodeGraph.totalNodeList;
+        //TODO figure out if to turn "4" into a const up top to avoid magic numbers
+        //? Think about integrating this section with "initCell" as that will remove a for loop
+        // N/E/S/W
+        int[] occupiedCardinalDirections = new int[4];
+        for (int i = 0; i < spawnedNodes.Count; i++)
+        {
+            Array.Clear(occupiedCardinalDirections, 0, occupiedCardinalDirections.Length);
+            SetupRoom(occupiedCardinalDirections, spawnedNodes[i]);
+        }
 
         CheckGrammars();
 
@@ -187,44 +194,30 @@ public class New_MapManager : MonoBehaviour
         Debug.Log("Total Generation Attempts: " + generationAttempts);
     }
 
-    private void SetupBasicRoomInfo()
+    // This function is seperate from the initial
+    private void SetupRoom(int[] occupiedCardinalDirections, Node nodeToSetup)
     {
-        List<Node> spawnedNodes = nodeGraph.totalNodeList;
+        int cellPosX = nodeToSetup.gridPos.x;
+        int cellPosY = nodeToSetup.gridPos.y;
 
-        //TODO figure out if to turn "4" into a const up top to avoid magic numbers
-        // N/E/S/W
-        int[] occupiedCardinalDirections = new int[4];
-        // Loops through all nodes regardless of their relation to each other
+        // Check which directions from the node are occupied by another node
+        if (mapArray[cellPosX - 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.NORTH] = 1; }
+        if (mapArray[cellPosX + 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.SOUTH] = 1; }
+        if (mapArray[cellPosX, cellPosY + 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.EAST] = 1; }
+        if (mapArray[cellPosX, cellPosY - 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.WEST] = 1; }
 
-        for (int i = 0; i < spawnedNodes.Count; i++)
-        {
-            //=================================================================================
-            //                         Handles initial room prefab
-            //=================================================================================
-            Array.Clear(occupiedCardinalDirections, 0, occupiedCardinalDirections.Length);
+        nodeToSetup.AddCardinalNeighbourSet(occupiedCardinalDirections);
 
-            int cellPosX = spawnedNodes[i].gridPos.x;
-            int cellPosY = spawnedNodes[i].gridPos.y;
+        // Get a random room type from the initial possible room types list
+        List<SO_RoomType> possibleRoomTypeList = allRoomTypes.initialRoomTypes;
+        SO_RoomType chosenRoomType = possibleRoomTypeList[UnityEngine.Random.Range(0, possibleRoomTypeList.Count)];
+        nodeToSetup.roomType = chosenRoomType;
 
-            // Check which directions from the node are occupied by another node
-            if (mapArray[cellPosX - 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.NORTH] = 1; }
-            if (mapArray[cellPosX + 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.SOUTH] = 1; }
-            if (mapArray[cellPosX, cellPosY + 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.EAST] = 1; }
-            if (mapArray[cellPosX, cellPosY - 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.WEST] = 1; }
+        // If the room has any feature prefabs that can be shared add it to a list that can be looped through later to spread those prefabs
+        if (chosenRoomType.featurePrefabs.Count > 0) { featureOriginNodes.Add(nodeToSetup); }
 
-            spawnedNodes[i].AddCardinalNeighbourSet(occupiedCardinalDirections);
-
-            // Get a random room type from the initial possible room types list
-            List<SO_RoomType> possibleRoomTypeList = allRoomTypes.initialRoomTypes;
-            SO_RoomType chosenRoomType = possibleRoomTypeList[UnityEngine.Random.Range(0, possibleRoomTypeList.Count)];
-            spawnedNodes[i].roomType = chosenRoomType;
-
-            // If the room has any feature prefabs that can be shared add it to a list that can be looped through later to spread those prefabs
-            if (chosenRoomType.featurePrefabs.Count > 0) { featureOriginNodes.Add(spawnedNodes[i]); }
-
-            // Prompts node to store rotation and basic room outer structure (a prefab with the correct number of doors, currently only one of each type exists)
-            spawnedNodes[i].SetupBasicRoom(GetNeighbourCount(spawnedNodes[i].gridPos.x, spawnedNodes[i].gridPos.y));
-        }
+        // Prompts node to store rotation and basic room outer structure (a prefab with the correct number of doors, currently only one of each type exists)
+        nodeToSetup.SetupBasicRoom(GetNeighbourCount(nodeToSetup.gridPos.x, nodeToSetup.gridPos.y));
     }
 
     private void BuildRoom()
@@ -280,7 +273,7 @@ public class New_MapManager : MonoBehaviour
         return occupiedNeighbours;
     }
 
-    private bool VisitCell(Vector2Int newCellPos, Node previousNode, E_CardinalDirections traversalDirection)
+    private bool VisitCell(Vector2Int newCellPos, Node previousNode)
     {
         if ((mapArray[newCellPos.x, newCellPos.y] != 0) || (GetNeighbourCount(newCellPos.x, newCellPos.y) > 1) || (mapArrayCount > maxNodes) || (UnityEngine.Random.value < 0.4))
         {
@@ -293,12 +286,12 @@ public class New_MapManager : MonoBehaviour
         mapArray[newCellPos.x, newCellPos.y] = 1;
         mapArrayCount++;
 
-        InitRoom(newNode, previousNode, traversalDirection);
+        InitRoom(newNode, previousNode);
 
         return true;
     }
 
-    private void InitRoom(Node newNode, Node previousNode, E_CardinalDirections traversalDirection)
+    private void InitRoom(Node newNode, Node previousNode)
     {
         Vector2 position = new Vector2(newNode.gridPos.x * cellSize, -newNode.gridPos.y * cellSize);
         GameObject newRoomObj = Instantiate(newRoom, position, Quaternion.identity);
@@ -534,6 +527,25 @@ public class New_MapManager : MonoBehaviour
             {
 
                 //TODO check the neighbours of each node and see if another room can be placed, if so place it with the new prefab as it's main
+                int cellPosX = nodeReferenceList[i].gridPos.x;
+                int cellPosY = nodeReferenceList[i].gridPos.y;
+
+                // Checks the physical neighbours of the node to see if another node can be placed
+                if (GetNeighbourCount(nodeReferenceList[i].gridPos.x, nodeReferenceList[i].gridPos.y) < 4)
+                {
+                    //TODO improve the way directions for the new room are chosen, currently it just goes N/S/E/W
+                    Vector2Int newCellPos = new Vector2Int();
+                    if (mapArray[cellPosX - 1, cellPosY] == 0) { newCellPos.Set(cellPosX - 1, cellPosY); }
+                    else if (mapArray[cellPosX + 1, cellPosY] == 0) { newCellPos.Set(cellPosX + 1, cellPosY); }
+                    else if (mapArray[cellPosX, cellPosY + 1] == 0) { newCellPos.Set(cellPosX, cellPosY + 1); }
+                    else if (mapArray[cellPosX, cellPosY - 1] == 0) { newCellPos.Set(cellPosX, cellPosY - 1); }
+                    else { Debug.LogError(" If the code has made it here, it somehow has less than 4 neighbours but none in any cardinal direction... somehow "); }
+
+                    //TODO figure out how the node that is added to is chosen, currently just picks the first node in the list
+                    VisitCell(newCellPos, nodeReferenceList[0]);
+
+                    //SetupRoom(new int[4], );
+                }
             }
         }
     }

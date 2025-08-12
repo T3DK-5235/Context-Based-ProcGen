@@ -85,6 +85,11 @@ public class Node
         this.occupiedCardinalDirections = occupiedDirection;
     }
 
+    public int[] GetCardinalNeighbourSet()
+    {
+        return occupiedCardinalDirections;
+    }
+
     public void SetupBasicRoom(int neighbourCount)
     {
         int rotationDegree = 0;
@@ -93,7 +98,6 @@ public class Node
         {
             case 1:
                 relevantPrefab = genValues.basicDeadEnd;
-
                 if (occupiedCardinalDirections.SequenceEqual(defaultDeadEndConnections)) { break; }
                 if (occupiedCardinalDirections[(int)E_CardinalDirections.EAST] == 1) { rotationDegree = 90; break; }
                 if (occupiedCardinalDirections[(int)E_CardinalDirections.WEST] == 1) { rotationDegree = 270; break; }
@@ -142,8 +146,8 @@ public class Node
                 if (occupiedCardinalDirections.SequenceEqual(defaultTShapeConnections)) { break; }
                 // If there is a not a southern connection (default entryway direction) return 180, as none of the 3 connections can be south
                 if (occupiedCardinalDirections[(int)E_CardinalDirections.SOUTH] != 1) { rotationDegree = 180; break; }
-                if (occupiedCardinalDirections[(int)E_CardinalDirections.EAST] != 1) { rotationDegree =  270; break; }
-                if (occupiedCardinalDirections[(int)E_CardinalDirections.WEST] != 1) { rotationDegree =  90; break; }
+                if (occupiedCardinalDirections[(int)E_CardinalDirections.EAST] != 1) { rotationDegree = 270; break; }
+                if (occupiedCardinalDirections[(int)E_CardinalDirections.WEST] != 1) { rotationDegree = 90; break; }
                 break;
             default:
                 // If 4 exits are found, no rotation is needed as all cardinal directions are occupied
