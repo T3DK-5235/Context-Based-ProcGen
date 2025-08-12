@@ -8,7 +8,7 @@ public class SO_GraphGrammar : ScriptableObject
     [SerializeField] public List<SO_RoomType> relevantGrammarPattern;
     public List<int> relevantGrammarPatternIDs;
 
-    //TODO this section is not yet implemented
+    //? Maybe turn all of the below into lists, to allow more complex room replacing/adding
     [Header("For replacing an existing node")]
     // Whether the result from the grammar replaces 
     [SerializeField] public bool replace;

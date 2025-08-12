@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 858ffcd2f48e38b4eba4d29cd3d16c8c, type: 3}
+  m_Name: MaterialsLab_Grammar
+  m_EditorClassIdentifier: 
+  relevantGrammarPattern:
+  - {fileID: 11400000, guid: 256cc2cd736429a498937fa615ddf057, type: 2}
+  - {fileID: 11400000, guid: 426d1c7185e2e634a80ab5b551d9ba90, type: 2}
+  relevantGrammarPatternIDs: 0100000003000000
+  replace: 0
+  replaceType: {fileID: 0}
+  resultantRoomType: {fileID: 11400000, guid: 6c8dd95fe58d0b74a8153df081ad1143, type: 2}

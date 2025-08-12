@@ -92,6 +92,8 @@ public class Node
 
     public void SetupBasicRoom(int neighbourCount)
     {
+        //! this currently decides based on neighbours, even if those neighbours shouldn't be connected
+        //! could be better to decide based on connections?
         int rotationDegree = 0;
         GameObject relevantPrefab = null;
         switch (neighbourCount)

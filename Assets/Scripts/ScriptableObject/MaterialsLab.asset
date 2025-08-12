@@ -9,9 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 671843b06e34d64429aa990f9737d071, type: 3}
-  m_Name: GraphGrammarContainer
+  m_Script: {fileID: 11500000, guid: 5039dfb911f204e41a7581713100a3e4, type: 3}
+  m_Name: MaterialsLab
   m_EditorClassIdentifier: 
-  graphGrammarList:
-  - {fileID: 11400000, guid: 5b89df1dcda6f2a47b7c77171d2667d7, type: 2}
-  - {fileID: 11400000, guid: 8959fdc5ec142fa47b99330e7d0900b9, type: 2}
+  roomType: 2
+  tagID: 6
+  roomPriority: 1
+  maxInstances: 1
+  baseRoomPrefab: {fileID: 919132149155446097, guid: e78b2783ea09bd344b0809d56adc34af, type: 3}
+  isEndRoom: 0
+  featurePrefabs: []

@@ -161,11 +161,10 @@ public class New_MapManager : MonoBehaviour
         //Debug.Log("End Room Number: " + endRooms.Count);
         nodeGraph.CreateAdjacencyMatrix();
 
-
-
         List<Node> spawnedNodes = nodeGraph.totalNodeList;
         //TODO figure out if to turn "4" into a const up top to avoid magic numbers
         //? Think about integrating this section with "initCell" as that will remove a for loop
+        //? Can't currently, as an adjacency matrix needs to be created before rooms can be setup
         // N/E/S/W
         int[] occupiedCardinalDirections = new int[4];
         for (int i = 0; i < spawnedNodes.Count; i++)
@@ -194,35 +193,11 @@ public class New_MapManager : MonoBehaviour
         Debug.Log("Total Generation Attempts: " + generationAttempts);
     }
 
-    // This function is seperate from the initial
-    private void SetupRoom(int[] occupiedCardinalDirections, Node nodeToSetup)
-    {
-        int cellPosX = nodeToSetup.gridPos.x;
-        int cellPosY = nodeToSetup.gridPos.y;
-
-        // Check which directions from the node are occupied by another node
-        if (mapArray[cellPosX - 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.NORTH] = 1; }
-        if (mapArray[cellPosX + 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.SOUTH] = 1; }
-        if (mapArray[cellPosX, cellPosY + 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.EAST] = 1; }
-        if (mapArray[cellPosX, cellPosY - 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.WEST] = 1; }
-
-        nodeToSetup.AddCardinalNeighbourSet(occupiedCardinalDirections);
-
-        // Get a random room type from the initial possible room types list
-        List<SO_RoomType> possibleRoomTypeList = allRoomTypes.initialRoomTypes;
-        SO_RoomType chosenRoomType = possibleRoomTypeList[UnityEngine.Random.Range(0, possibleRoomTypeList.Count)];
-        nodeToSetup.roomType = chosenRoomType;
-
-        // If the room has any feature prefabs that can be shared add it to a list that can be looped through later to spread those prefabs
-        if (chosenRoomType.featurePrefabs.Count > 0) { featureOriginNodes.Add(nodeToSetup); }
-
-        // Prompts node to store rotation and basic room outer structure (a prefab with the correct number of doors, currently only one of each type exists)
-        nodeToSetup.SetupBasicRoom(GetNeighbourCount(nodeToSetup.gridPos.x, nodeToSetup.gridPos.y));
-    }
-
+    //! Currently, due to how grammars are applied, additional rooms can appear twice, once where they are meant to, and once where they are not
     private void BuildRoom()
     {
         List<Node> spawnedNodes = nodeGraph.totalNodeList;
+        Debug.Log("Now building rooms. There are " + spawnedNodes.Count + " Nodes to spawn");
 
         for (int i = 0; i < spawnedNodes.Count; i++)
         {
@@ -252,7 +227,7 @@ public class New_MapManager : MonoBehaviour
             // Debugging text
             GameObject newRoomInfo = Instantiate(roomInfoPrefab, roomPhysicalPosition, roomRotation);
             TMP_Text roomInfo = newRoomInfo.gameObject.transform.GetComponent<TMP_Text>();
-            roomInfo.SetText("ID: " + spawnedNodes[i].id + " --- RoomType: " + spawnedNodes[i].roomType);
+            roomInfo.SetText("ID: " + spawnedNodes[i].id + " --- RoomType: " + spawnedNodes[i].roomType  + " --- GridPos: " + spawnedNodes[i].gridPos.ToString());
             newRoomInfo.gameObject.transform.SetParent(newRoom.transform);
             newRoomInfo.transform.Translate(0.0f, -1.0f, 0.0f, Space.Self);
 
@@ -273,16 +248,24 @@ public class New_MapManager : MonoBehaviour
         return occupiedNeighbours;
     }
 
-    private bool VisitCell(Vector2Int newCellPos, Node previousNode)
+    private bool VisitCell(Vector2Int newCellPos, Node previousNode, bool additionalGrammarCells = false)
     {
-        if ((mapArray[newCellPos.x, newCellPos.y] != 0) || (GetNeighbourCount(newCellPos.x, newCellPos.y) > 1) || (mapArrayCount > maxNodes) || (UnityEngine.Random.value < 0.4))
+        Debug.Log("Does it fail here?");
+        
+        // The next check within the if statement is only performed during normal generation and is ignored if the cell is provided by a grammar
+        if (!additionalGrammarCells == true)
         {
-            return false;
+            // Checks the cell isnt occupied, the cell isnt too near other cells (additional grammar cells ignore this rule), there aren't too many cells, and if a random value fails
+            if ((mapArray[newCellPos.x, newCellPos.y] != 0) || (GetNeighbourCount(newCellPos.x, newCellPos.y) > 1) || (mapArrayCount > maxNodes) || (UnityEngine.Random.value < 0.4))
+            {
+                return false;
+            }
         }
 
         Node newNode = nodeGraph.AddNode(newCellPos);
 
         nodeQueue.Enqueue(newNode);
+        Debug.Log("Or does it fail here?");
         mapArray[newCellPos.x, newCellPos.y] = 1;
         mapArrayCount++;
 
@@ -308,6 +291,41 @@ public class New_MapManager : MonoBehaviour
 
         // Replaces the "1" used in previous function that was used to show the cell was occupied, with the int id of the Node/Cell
         mapArray[newNode.gridPos.x, newNode.gridPos.y] = newNode.id;
+
+        // SetupRoom(new int[4], newNode);
+    }
+
+    // Can optionally tell it to override a andom
+    private void SetupRoom(int[] occupiedCardinalDirections, Node nodeToSetup, bool overrideRoomType = false, SO_RoomType chosenRoomType = null)
+    {
+        int cellPosX = nodeToSetup.gridPos.x;
+        int cellPosY = nodeToSetup.gridPos.y;
+
+        //! error here, I think from additional grammar room
+        // Check which directions from the node are occupied by another node
+        if (mapArray[cellPosX - 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.NORTH] = 1; }
+        if (mapArray[cellPosX + 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.SOUTH] = 1; }
+        if (mapArray[cellPosX, cellPosY + 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.EAST] = 1; }
+        if (mapArray[cellPosX, cellPosY - 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.WEST] = 1; }
+
+        nodeToSetup.AddCardinalNeighbourSet(occupiedCardinalDirections);
+
+        // If a type is not provided get a random room type from the initial possible room types list
+        if (overrideRoomType == false)
+        {
+            //TODO improve selection via weighted random?
+            //TODO include a max amount of certain rooms in the calculation
+            List<SO_RoomType> possibleRoomTypeList = allRoomTypes.initialRoomTypes;
+            chosenRoomType = possibleRoomTypeList[UnityEngine.Random.Range(0, possibleRoomTypeList.Count)];
+        }
+        
+        nodeToSetup.roomType = chosenRoomType;
+
+        // If the room has any feature prefabs that can be shared add it to a list that can be looped through later to spread those prefabs
+        if (chosenRoomType.featurePrefabs.Count > 0) { featureOriginNodes.Add(nodeToSetup); }
+
+        // Prompts node to store rotation and basic room outer structure (a prefab with the correct number of doors, currently only one of each type exists)
+        nodeToSetup.SetupBasicRoom(GetNeighbourCount(nodeToSetup.gridPos.x, nodeToSetup.gridPos.y));
     }
 
     // Based on a breadth first search, so changes evenly radiate out from a room
@@ -531,20 +549,33 @@ public class New_MapManager : MonoBehaviour
                 int cellPosY = nodeReferenceList[i].gridPos.y;
 
                 // Checks the physical neighbours of the node to see if another node can be placed
-                if (GetNeighbourCount(nodeReferenceList[i].gridPos.x, nodeReferenceList[i].gridPos.y) < 4)
+                int neighbourCount = GetNeighbourCount(nodeReferenceList[i].gridPos.x, nodeReferenceList[i].gridPos.y);
+                if (neighbourCount < 4)
                 {
+                    Debug.Log(i + "NodeID: " + nodeReferenceList[i].id + " and it's neighbour count: " + neighbourCount);
                     //TODO improve the way directions for the new room are chosen, currently it just goes N/S/E/W
                     Vector2Int newCellPos = new Vector2Int();
+
+                    //! double check that the chosen position is within array bounds
                     if (mapArray[cellPosX - 1, cellPosY] == 0) { newCellPos.Set(cellPosX - 1, cellPosY); }
                     else if (mapArray[cellPosX + 1, cellPosY] == 0) { newCellPos.Set(cellPosX + 1, cellPosY); }
                     else if (mapArray[cellPosX, cellPosY + 1] == 0) { newCellPos.Set(cellPosX, cellPosY + 1); }
                     else if (mapArray[cellPosX, cellPosY - 1] == 0) { newCellPos.Set(cellPosX, cellPosY - 1); }
                     else { Debug.LogError(" If the code has made it here, it somehow has less than 4 neighbours but none in any cardinal direction... somehow "); }
-
+                    Debug.Log(i + " -------------------------------------");
                     //TODO figure out how the node that is added to is chosen, currently just picks the first node in the list
-                    VisitCell(newCellPos, nodeReferenceList[0]);
 
-                    //SetupRoom(new int[4], );
+                    //! currently there is an issue where the visit cells throws an out of array bounds exception
+                    Debug.Log(i + "Parent ID for new node: " + nodeReferenceList[0].id + " ------ And it's cell pos: " + newCellPos.ToString());
+                    VisitCell(newCellPos, nodeReferenceList[0], true);
+                    //? Currently gets the most recent node (Which the new node will be as it's created just before this)
+                    //? This will become more complicated if multiple nodes are created due to a grammar, so will have to check how to handle that.
+                    Debug.Log(i + "Checking new node values: Grid Pos:" + nodeGraph.totalNodeList[nodeGraph.totalNodeList.Count - 1].gridPos.ToString() +
+                    " --- NodeID: " + nodeGraph.totalNodeList[nodeGraph.totalNodeList.Count - 1].id);
+                    SetupRoom(new int[4], nodeGraph.totalNodeList[nodeGraph.totalNodeList.Count - 1], true, relevantGrammar.resultantRoomType);
+
+                    // If the room has already spawned, no need to try again 
+                    break;
                 }
             }
         }

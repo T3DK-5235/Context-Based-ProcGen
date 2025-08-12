@@ -9,9 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 671843b06e34d64429aa990f9737d071, type: 3}
-  m_Name: GraphGrammarContainer
+  m_Script: {fileID: 11500000, guid: 858ffcd2f48e38b4eba4d29cd3d16c8c, type: 3}
+  m_Name: GraphGrammar
   m_EditorClassIdentifier: 
-  graphGrammarList:
-  - {fileID: 11400000, guid: 5b89df1dcda6f2a47b7c77171d2667d7, type: 2}
-  - {fileID: 11400000, guid: 8959fdc5ec142fa47b99330e7d0900b9, type: 2}
+  relevantGrammarPattern: []
+  relevantGrammarPatternIDs: 
+  replace: 0
+  replaceType: {fileID: 0}
+  resultantRoomType: {fileID: 0}

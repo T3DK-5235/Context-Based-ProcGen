@@ -20,3 +20,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 88183111259b83642bc8c549134005d9, type: 2}
   alteredRoomTypes:
   - {fileID: 11400000, guid: 7c554ea2db817fe4488759491f1c330c, type: 2}
+  - {fileID: 11400000, guid: 6c8dd95fe58d0b74a8153df081ad1143, type: 2}
