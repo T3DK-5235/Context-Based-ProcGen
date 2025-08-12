@@ -19,3 +19,4 @@ MonoBehaviour:
   replace: 0
   replaceType: {fileID: 0}
   resultantRoomType: {fileID: 11400000, guid: 6c8dd95fe58d0b74a8153df081ad1143, type: 2}
+  placeBesideType: {fileID: 11400000, guid: 256cc2cd736429a498937fa615ddf057, type: 2}

@@ -107,7 +107,7 @@ public class New_MapManager : MonoBehaviour
 
         Vector2Int initialPosition = new Vector2Int(initialCellX, initialCellY);
 
-        VisitCell(initialPosition, null);
+        VisitCell(initialPosition, null, E_CardinalDirections.NONE);
 
         GenerateMap();
     }
@@ -124,19 +124,19 @@ public class New_MapManager : MonoBehaviour
             // Cascades through the if statements and attempts to create new cells
             if (previousCellPos.x > 1)
             {
-                created |= VisitCell(new Vector2Int(previousCellPos.x - 1, previousCellPos.y), previousNode);
+                created |= VisitCell(new Vector2Int(previousCellPos.x - 1, previousCellPos.y), previousNode, E_CardinalDirections.EAST);
             }
             if (previousCellPos.x < 8)
             {
-                created |= VisitCell(new Vector2Int(previousCellPos.x + 1, previousCellPos.y), previousNode);
+                created |= VisitCell(new Vector2Int(previousCellPos.x + 1, previousCellPos.y), previousNode, E_CardinalDirections.WEST);
             }
             if (previousCellPos.y > 2)
             {
-                created |= VisitCell(new Vector2Int(previousCellPos.x, previousCellPos.y - 1), previousNode);
+                created |= VisitCell(new Vector2Int(previousCellPos.x, previousCellPos.y - 1), previousNode, E_CardinalDirections.SOUTH);
             }
             if (previousCellPos.y < 7)
             {
-                created |= VisitCell(new Vector2Int(previousCellPos.x, previousCellPos.y + 1), previousNode);
+                created |= VisitCell(new Vector2Int(previousCellPos.x, previousCellPos.y + 1), previousNode, E_CardinalDirections.NORTH);
             }
 
             // if a new cell is not created, add the existing index to the endrooms list
@@ -248,7 +248,7 @@ public class New_MapManager : MonoBehaviour
         return occupiedNeighbours;
     }
 
-    private bool VisitCell(Vector2Int newCellPos, Node previousNode, bool additionalGrammarCells = false)
+    private bool VisitCell(Vector2Int newCellPos, Node previousNode, E_CardinalDirections expansionDirection, bool additionalGrammarCells = false)
     {
         Debug.Log("Does it fail here?");
         
@@ -269,12 +269,12 @@ public class New_MapManager : MonoBehaviour
         mapArray[newCellPos.x, newCellPos.y] = 1;
         mapArrayCount++;
 
-        InitRoom(newNode, previousNode);
+        InitRoom(newNode, previousNode, expansionDirection);
 
         return true;
     }
 
-    private void InitRoom(Node newNode, Node previousNode)
+    private void InitRoom(Node newNode, Node previousNode, E_CardinalDirections expansionDirection)
     {
         Vector2 position = new Vector2(newNode.gridPos.x * cellSize, -newNode.gridPos.y * cellSize);
         GameObject newRoomObj = Instantiate(newRoom, position, Quaternion.identity);
@@ -284,15 +284,13 @@ public class New_MapManager : MonoBehaviour
         cellText.SetText("ID: " + newNode.id);
 
         // If statement is used to filter out the root node, as it has no previous node to connect to
-        if (previousNode != null) { nodeGraph.AddNodeConnection(newNode, previousNode); }
+        if (previousNode != null) { nodeGraph.AddNodeConnection(newNode, previousNode, expansionDirection); }
 
         newNode.basicMapPrefab = newRoomObj;
         spawnedMapCells.Add(newRoomObj);
 
         // Replaces the "1" used in previous function that was used to show the cell was occupied, with the int id of the Node/Cell
         mapArray[newNode.gridPos.x, newNode.gridPos.y] = newNode.id;
-
-        // SetupRoom(new int[4], newNode);
     }
 
     // Can optionally tell it to override a andom
@@ -325,7 +323,7 @@ public class New_MapManager : MonoBehaviour
         if (chosenRoomType.featurePrefabs.Count > 0) { featureOriginNodes.Add(nodeToSetup); }
 
         // Prompts node to store rotation and basic room outer structure (a prefab with the correct number of doors, currently only one of each type exists)
-        nodeToSetup.SetupBasicRoom(GetNeighbourCount(nodeToSetup.gridPos.x, nodeToSetup.gridPos.y));
+        nodeToSetup.SetupBasicRoom();
     }
 
     // Based on a breadth first search, so changes evenly radiate out from a room
@@ -395,6 +393,7 @@ public class New_MapManager : MonoBehaviour
     // This could allow easy integration with lock and key puzzles, or for making it more likely to create altered/unique rooms further from the entrance
     private void CheckGrammars()
     {
+        //TODO RETURN LIST OF NODES TO RE SET UP DUE TO GRAMMAR CHANGES?
         // Depth first search of graph to get all possible connections that exist in the graph
         // // Whilst doing this, add connection types to a dictionary of (SO_RoomType,SO_RoomType) key to (Node, Node) value
 
@@ -543,39 +542,61 @@ public class New_MapManager : MonoBehaviour
         {
             for (int i = 0; i < nodeReferenceList.Count; i++)
             {
-
-                //TODO check the neighbours of each node and see if another room can be placed, if so place it with the new prefab as it's main
-                int cellPosX = nodeReferenceList[i].gridPos.x;
-                int cellPosY = nodeReferenceList[i].gridPos.y;
-
-                // Checks the physical neighbours of the node to see if another node can be placed
-                int neighbourCount = GetNeighbourCount(nodeReferenceList[i].gridPos.x, nodeReferenceList[i].gridPos.y);
-                if (neighbourCount < 4)
+                if (nodeReferenceList[i].roomType.tagID == relevantGrammar.placeBesideType.tagID)
                 {
-                    Debug.Log(i + "NodeID: " + nodeReferenceList[i].id + " and it's neighbour count: " + neighbourCount);
-                    //TODO improve the way directions for the new room are chosen, currently it just goes N/S/E/W
-                    Vector2Int newCellPos = new Vector2Int();
 
-                    //! double check that the chosen position is within array bounds
-                    if (mapArray[cellPosX - 1, cellPosY] == 0) { newCellPos.Set(cellPosX - 1, cellPosY); }
-                    else if (mapArray[cellPosX + 1, cellPosY] == 0) { newCellPos.Set(cellPosX + 1, cellPosY); }
-                    else if (mapArray[cellPosX, cellPosY + 1] == 0) { newCellPos.Set(cellPosX, cellPosY + 1); }
-                    else if (mapArray[cellPosX, cellPosY - 1] == 0) { newCellPos.Set(cellPosX, cellPosY - 1); }
-                    else { Debug.LogError(" If the code has made it here, it somehow has less than 4 neighbours but none in any cardinal direction... somehow "); }
-                    Debug.Log(i + " -------------------------------------");
-                    //TODO figure out how the node that is added to is chosen, currently just picks the first node in the list
+                    //TODO check the neighbours of each node and see if another room can be placed, if so place it with the new prefab as it's main
+                    int cellPosX = nodeReferenceList[i].gridPos.x;
+                    int cellPosY = nodeReferenceList[i].gridPos.y;
 
-                    //! currently there is an issue where the visit cells throws an out of array bounds exception
-                    Debug.Log(i + "Parent ID for new node: " + nodeReferenceList[0].id + " ------ And it's cell pos: " + newCellPos.ToString());
-                    VisitCell(newCellPos, nodeReferenceList[0], true);
-                    //? Currently gets the most recent node (Which the new node will be as it's created just before this)
-                    //? This will become more complicated if multiple nodes are created due to a grammar, so will have to check how to handle that.
-                    Debug.Log(i + "Checking new node values: Grid Pos:" + nodeGraph.totalNodeList[nodeGraph.totalNodeList.Count - 1].gridPos.ToString() +
-                    " --- NodeID: " + nodeGraph.totalNodeList[nodeGraph.totalNodeList.Count - 1].id);
-                    SetupRoom(new int[4], nodeGraph.totalNodeList[nodeGraph.totalNodeList.Count - 1], true, relevantGrammar.resultantRoomType);
+                    // Checks the physical neighbours of the node to see if another node can be placed
+                    int neighbourCount = GetNeighbourCount(nodeReferenceList[i].gridPos.x, nodeReferenceList[i].gridPos.y);
+                    if (neighbourCount < 4)
+                    {
+                        Debug.Log(i + "NodeID: " + nodeReferenceList[i].id + " and it's neighbour count: " + neighbourCount);
+                        //TODO improve the way directions for the new room are chosen, currently it just goes N/S/E/W
+                        Vector2Int newCellPos = new Vector2Int();
 
-                    // If the room has already spawned, no need to try again 
-                    break;
+                        //! double check that the chosen position is within array bounds
+                        E_CardinalDirections expansionDirection = E_CardinalDirections.NONE;
+                        if (mapArray[cellPosX - 1, cellPosY] == 0)
+                        {
+                            newCellPos.Set(cellPosX - 1, cellPosY);
+                            expansionDirection = E_CardinalDirections.EAST;
+                        }
+                        else if (mapArray[cellPosX + 1, cellPosY] == 0)
+                        {
+                            newCellPos.Set(cellPosX + 1, cellPosY);
+                            expansionDirection = E_CardinalDirections.WEST;
+                        }
+                        else if (mapArray[cellPosX, cellPosY + 1] == 0)
+                        {
+                            newCellPos.Set(cellPosX, cellPosY + 1);
+                            expansionDirection = E_CardinalDirections.NORTH;
+                        }
+                        else if (mapArray[cellPosX, cellPosY - 1] == 0)
+                        {
+                            newCellPos.Set(cellPosX, cellPosY - 1);
+                            expansionDirection = E_CardinalDirections.SOUTH;
+                        }
+                        else { Debug.LogError(" If the code has made it here, it somehow has less than 4 neighbours but none in any cardinal direction... somehow "); }
+                        Debug.Log(i + " -------------------------------------");
+                        //TODO figure out how the node that is added to is chosen, currently just picks the first node in the list
+
+                        //! currently there is an issue where the visit cells throws an out of array bounds exception, need to check cellPosX and Y are within bounds
+                        Debug.Log(i + "Parent ID for new node: " + nodeReferenceList[i].id + " ------ And it's cell pos: " + newCellPos.ToString());
+                        VisitCell(newCellPos, nodeReferenceList[i], expansionDirection, true);
+                        //? Currently gets the most recent node (Which the new node will be as it's created just before this)
+                        //? This will become more complicated if multiple nodes are created due to a grammar, so will have to check how to handle that.
+                        Debug.Log(i + "Checking new node values: Grid Pos:" + nodeGraph.totalNodeList[nodeGraph.totalNodeList.Count - 1].gridPos.ToString() +
+                        " --- NodeID: " + nodeGraph.totalNodeList[nodeGraph.totalNodeList.Count - 1].id);
+                        SetupRoom(new int[4], nodeGraph.totalNodeList[nodeGraph.totalNodeList.Count - 1], true, relevantGrammar.resultantRoomType);
+
+                        // Re set up parent node, as the number of connections, thus the prefab required, will have changed.
+                        nodeReferenceList[i].SetupBasicRoom();
+                        // If the room has already spawned, no need to try again 
+                        return;
+                    }
                 }
             }
         }

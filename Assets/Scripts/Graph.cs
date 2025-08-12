@@ -44,9 +44,9 @@ public class Graph
         return newNode;
     }
 
-    public void AddNodeConnection(Node originNode, Node destinationNode)
+    public void AddNodeConnection(Node originNode, Node destinationNode, E_CardinalDirections expansionDirection)
     {
-        originNode.AddConnection(destinationNode);
+        originNode.AddConnection(destinationNode, expansionDirection);
     }
 
     // use nullable values to fill in empty squares

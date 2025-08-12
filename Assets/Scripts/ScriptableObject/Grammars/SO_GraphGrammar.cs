@@ -17,6 +17,7 @@ public class SO_GraphGrammar : ScriptableObject
 
     [Header("Grammar Result")]
     [SerializeField] public SO_RoomType resultantRoomType;
+    [SerializeField] public SO_RoomType placeBesideType;
     
 
 }
