@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Cell
   m_EditorClassIdentifier: 
   roomType: 3
+  tagID: 1
   roomPriority: 1
   maxInstances: 1
-  baseRoomPrefab: {fileID: 919132149155446097, guid: e78b2783ea09bd344b0809d56adc34af, type: 3}
+  baseRoomPrefab: {fileID: 919132149155446097, guid: d7d5c175bd69f8043a80114b00bac5be, type: 3}
   isEndRoom: 0
   featurePrefabs: []
