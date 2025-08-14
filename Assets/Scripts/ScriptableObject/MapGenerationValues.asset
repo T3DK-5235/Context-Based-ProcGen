@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 84bb7ab90d0ae104abaaba0ea5e907cc, type: 3}
   m_Name: MapGenerationValues
   m_EditorClassIdentifier: 
-  gridSizeX: 0
-  gridSizeY: 0
-  minCellCount: 0
-  maxCellCount: 0
-  initialCellX: 0
-  initialCellY: 0
+  gridSizeX: 10
+  gridSizeY: 10
+  minCellCount: 16
+  maxCellCount: 24
+  initialCellX: 5
+  initialCellY: 6
   basicDeadEnd: {fileID: 919132149155446097, guid: 376d52eb912278540abe9a8465976857, type: 3}
   basicCorner: {fileID: 919132149155446097, guid: 419921e859889364f8168652d0ebe9f6, type: 3}
   basicHallway: {fileID: 919132149155446097, guid: 0fdc087a1e5366b46b86da162e745bbf, type: 3}

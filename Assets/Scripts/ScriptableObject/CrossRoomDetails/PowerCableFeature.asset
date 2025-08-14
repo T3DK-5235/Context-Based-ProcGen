@@ -9,13 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5039dfb911f204e41a7581713100a3e4, type: 3}
-  m_Name: Observation
+  m_Script: {fileID: 11500000, guid: fd917446a0463904cb9f16859574c6aa, type: 3}
+  m_Name: PowerCableFeature
   m_EditorClassIdentifier: 
-  roomType: 2
-  tagID: 3
-  roomPriority: 1
-  maxInstances: 1
-  baseRoomPrefab: {fileID: 919132149155446097, guid: 3f38b026315c9d746a1fac2fe1f3fe82, type: 3}
-  isEndRoom: 0
-  featurePrefabs: []
+  featurePrefab: {fileID: 919132149155446097, guid: 1fcb290c271a3e74ca7b53653b47c55c, type: 3}
+  linkMaxDistance: 3
+  linkChance: 75

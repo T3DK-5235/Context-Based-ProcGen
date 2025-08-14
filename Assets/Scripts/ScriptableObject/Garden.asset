@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: Garden
   m_EditorClassIdentifier: 
   roomType: 0
+  tagID: 2
   roomPriority: 1
   maxInstances: 1
-  baseRoomPrefab: {fileID: 919132149155446097, guid: e78b2783ea09bd344b0809d56adc34af, type: 3}
+  baseRoomPrefab: {fileID: 919132149155446097, guid: 35f3a3a01f407114e85f8f0ce6046fb0, type: 3}
   isEndRoom: 0
-  featurePrefabs: []
+  featurePrefabs:
+  - {fileID: 11400000, guid: 1f0041bdc99455b429bdd2861f0f3c94, type: 2}

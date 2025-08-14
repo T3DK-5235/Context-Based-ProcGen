@@ -16,6 +16,7 @@ MonoBehaviour:
   tagID: 5
   roomPriority: 1
   maxInstances: 1
-  baseRoomPrefab: {fileID: 919132149155446097, guid: e78b2783ea09bd344b0809d56adc34af, type: 3}
+  baseRoomPrefab: {fileID: 919132149155446097, guid: 2e3ded92543224745b63e2605ed85ed4, type: 3}
   isEndRoom: 0
-  featurePrefabs: []
+  featurePrefabs:
+  - {fileID: 11400000, guid: ee44eb470b554b94db671cf88e2a5bda, type: 2}

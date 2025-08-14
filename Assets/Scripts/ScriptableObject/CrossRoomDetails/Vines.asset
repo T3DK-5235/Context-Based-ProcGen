@@ -10,8 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fd917446a0463904cb9f16859574c6aa, type: 3}
-  m_Name: PowerCableFeature
+  m_Name: Vines
   m_EditorClassIdentifier: 
-  featurePrefab: {fileID: 919132149155446097, guid: 1fcb290c271a3e74ca7b53653b47c55c, type: 3}
+  featurePrefab: {fileID: 919132149155446097, guid: 23b664e98a0485f48a1150a83ac76564, type: 3}
   linkMaxDistance: 3
-  linkChance: 65
+  linkChance: 50

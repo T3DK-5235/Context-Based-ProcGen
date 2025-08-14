@@ -27,7 +27,8 @@ public class SO_GraphGrammarContainer : ScriptableObject
 
             // Sorts the tags to be in ascending order, this will be used to get the smallest tagID value 
             // This is to prevent issues where x after y is detected but y after x is not.
-            tagIDList.Sort();
+            //? testing to see if removing this fixes duplication issues
+            // tagIDList.Sort();
 
             string tagIDListValues = "IDs Found: ";
             for (int d = 0; d < tagIDList.Count; d++) { tagIDListValues += tagIDList[d] + "."; }

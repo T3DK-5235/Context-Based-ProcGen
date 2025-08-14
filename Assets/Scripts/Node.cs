@@ -197,14 +197,12 @@ public class Node
 
     public void SetupBasicRoom()
     {
-        //! this currently decides based on neighbours, even if those neighbours shouldn't be connected
-        //! could be better to decide based on connections?
         int rotationDegree = 0;
         GameObject relevantPrefab = null;
 
-        // string test2 = "Node ID" + id + " ------------ Edited occupiedDirection: ";
-        // for (int i = 0; i < occupiedDirection.Count(); i++) { test2 += occupiedDirection[i] + "."; }
-        // Debug.Log(test2);
+        string test2 = "Node ID" + id + " ------------ Edited occupiedDirection: ";
+        for (int i = 0; i < occupiedCardinalDirections.Count(); i++) { test2 += occupiedCardinalDirections[i] + "."; }
+        Debug.Log(test2);
 
         switch (connections.Count)
         {

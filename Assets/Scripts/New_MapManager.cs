@@ -122,6 +122,8 @@ public class New_MapManager : MonoBehaviour
 
             bool created = false;
             // Cascades through the if statements and attempts to create new cells
+            
+            //! east and west, and north and south *should* technically be swapped, as -1 actually goes up, back through the array
             if (previousCellPos.x > 1)
             {
                 created |= VisitCell(new Vector2Int(previousCellPos.x - 1, previousCellPos.y), previousNode, E_CardinalDirections.EAST);
@@ -301,10 +303,12 @@ public class New_MapManager : MonoBehaviour
 
         //! error here, I think from additional grammar room
         // Check which directions from the node are occupied by another node
-        if (mapArray[cellPosX - 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.NORTH] = 1; }
-        if (mapArray[cellPosX + 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.SOUTH] = 1; }
-        if (mapArray[cellPosX, cellPosY + 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.EAST] = 1; }
-        if (mapArray[cellPosX, cellPosY - 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.WEST] = 1; }
+        // Also check that those directions are within bounds, as out of bounds cannot be occupied anyway, and not catching this will cause an array bounds error
+        // Each statement needs two ifs as checking the second statement in the first if could cause an out of bounds error anyway
+        if (cellPosX - 1 > 0) { if (mapArray[cellPosX - 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.NORTH] = 1; } }
+        if (cellPosX + 1 < gridSizeX) { if (mapArray[cellPosX + 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.SOUTH] = 1; } }
+        if (cellPosY - 1 > 0) { if (mapArray[cellPosX, cellPosY + 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.EAST] = 1; } }
+        if (cellPosY + 1 < gridSizeY) { if (mapArray[cellPosX, cellPosY - 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.WEST] = 1; } }
 
         nodeToSetup.AddCardinalNeighbourSet(occupiedCardinalDirections);
 
@@ -446,7 +450,9 @@ public class New_MapManager : MonoBehaviour
                     nodePattern.Clear();
                     nodePattern.Add(visitingNode.roomType.tagID);
                     nodePattern.Add(nodeNeighbours[i].child.roomType.tagID);
-                    nodePattern.Sort();
+                    
+                    //? testing to see if removing this fixes duplication issues
+                    //nodePattern.Sort();
 
                     // List<Node> nodeReferenceList = new List<Node>() {visitingNode, nodeNeighbours[i].child};
                     // string nodePatternString = "NodePattern: ";
@@ -505,13 +511,6 @@ public class New_MapManager : MonoBehaviour
 
                     }
 
-                    // if (foundGrammar != null)
-                    // {
-                    //     visitingNode.roomType = foundGrammar.resultantRoomType;
-                    // }
-
-
-
                     if (!visitedNodes.Contains(nodeNeighbours[i].child))
                     {
                         nextToVisit.Push(nodeNeighbours[i].child);
@@ -546,8 +545,8 @@ public class New_MapManager : MonoBehaviour
                 {
 
                     //TODO check the neighbours of each node and see if another room can be placed, if so place it with the new prefab as it's main
-                    int cellPosX = nodeReferenceList[i].gridPos.x;
-                    int cellPosY = nodeReferenceList[i].gridPos.y;
+                    int prevCellPosX = nodeReferenceList[i].gridPos.x;
+                    int prevCellPosY = nodeReferenceList[i].gridPos.y;
 
                     // Checks the physical neighbours of the node to see if another node can be placed
                     int neighbourCount = GetNeighbourCount(nodeReferenceList[i].gridPos.x, nodeReferenceList[i].gridPos.y);
@@ -559,24 +558,24 @@ public class New_MapManager : MonoBehaviour
 
                         //! double check that the chosen position is within array bounds
                         E_CardinalDirections expansionDirection = E_CardinalDirections.NONE;
-                        if (mapArray[cellPosX - 1, cellPosY] == 0)
+                        if (mapArray[prevCellPosX - 1, prevCellPosY] == 0) //New node is West of parent
                         {
-                            newCellPos.Set(cellPosX - 1, cellPosY);
+                            newCellPos.Set(prevCellPosX - 1, prevCellPosY);
                             expansionDirection = E_CardinalDirections.EAST;
                         }
-                        else if (mapArray[cellPosX + 1, cellPosY] == 0)
+                        else if (mapArray[prevCellPosX + 1, prevCellPosY] == 0) // New node is East of parent
                         {
-                            newCellPos.Set(cellPosX + 1, cellPosY);
+                            newCellPos.Set(prevCellPosX + 1, prevCellPosY);
                             expansionDirection = E_CardinalDirections.WEST;
                         }
-                        else if (mapArray[cellPosX, cellPosY + 1] == 0)
+                        else if (mapArray[prevCellPosX, prevCellPosY + 1] == 0) // New node is South of parent
                         {
-                            newCellPos.Set(cellPosX, cellPosY + 1);
+                            newCellPos.Set(prevCellPosX, prevCellPosY + 1);
                             expansionDirection = E_CardinalDirections.NORTH;
                         }
-                        else if (mapArray[cellPosX, cellPosY - 1] == 0)
+                        else if (mapArray[prevCellPosX, prevCellPosY - 1] == 0) // New node is North of parent
                         {
-                            newCellPos.Set(cellPosX, cellPosY - 1);
+                            newCellPos.Set(prevCellPosX, prevCellPosY - 1);
                             expansionDirection = E_CardinalDirections.SOUTH;
                         }
                         else { Debug.LogError(" If the code has made it here, it somehow has less than 4 neighbours but none in any cardinal direction... somehow "); }
@@ -585,7 +584,14 @@ public class New_MapManager : MonoBehaviour
 
                         //! currently there is an issue where the visit cells throws an out of array bounds exception, need to check cellPosX and Y are within bounds
                         Debug.Log(i + "Parent ID for new node: " + nodeReferenceList[i].id + " ------ And it's cell pos: " + newCellPos.ToString());
+
+                        int initialRotation = nodeReferenceList[i].basicRoomData.Item1;
                         VisitCell(newCellPos, nodeReferenceList[i], expansionDirection, true);
+
+                        if (initialRotation == 270) { initialRotation -= 180; }
+                        if (initialRotation == 90) { initialRotation += 90; }
+                        nodeReferenceList[i].basicRoomData.Item1 = initialRotation + 90;
+
                         //? Currently gets the most recent node (Which the new node will be as it's created just before this)
                         //? This will become more complicated if multiple nodes are created due to a grammar, so will have to check how to handle that.
                         Debug.Log(i + "Checking new node values: Grid Pos:" + nodeGraph.totalNodeList[nodeGraph.totalNodeList.Count - 1].gridPos.ToString() +
