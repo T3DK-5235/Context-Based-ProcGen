@@ -17,12 +17,13 @@ public class New_MapManager : MonoBehaviour
     private int maxNodes;
     private List<Node> endRooms;
 
-    public int gridSizeX;
-    public int gridSizeY;
+    private int gridSizeX;
+    private int gridSizeY;
 
 
     public New_TempCell cellPrefab;
     private float cellSize;
+    private float nodeSize;
     private Queue<Node> nodeQueue;
     //private List<Node> spawnedNodes;
     List<GameObject> spawnedRooms;
@@ -30,11 +31,13 @@ public class New_MapManager : MonoBehaviour
 
     private Graph nodeGraph;
 
-    public int initialCellX = 5;
-    public int initialCellY = 6;
+    private int initialCellX;
+    private int initialCellY;
 
     // Stores a list of nodes hat contain features that can spread to nearby rooms so they can be revisited after complete map creation
     private List<Node> featureOriginNodes;
+
+    private const int ROOM_EXIT_DIRECTIONS = 4;
 
     [SerializeField] SO_MapGenerationValues mapGenValues;
     [SerializeField] SO_RoomTypeContainer allRoomTypes;
@@ -49,11 +52,20 @@ public class New_MapManager : MonoBehaviour
 
     void Start()
     {
-        minNodes = 16;
-        maxNodes = 24;
+        minNodes = mapGenValues._minNodeCount;
+        maxNodes = mapGenValues._maxNodeCount;
 
-        cellSize = 0.5f;
+        cellSize = mapGenValues._cellSize;
+        nodeSize = mapGenValues._nodeSize;
+
+        gridSizeX = mapGenValues._gridSizeX;
+        gridSizeY = mapGenValues._gridSizeY;
+
+        initialCellX = mapGenValues._initialCellX;
+        initialCellY = mapGenValues._initialCellY;
+
         //spawnedNodes = new List<Node>();
+
         spawnedRooms = new List<GameObject>();
         spawnedMapCells = new List<GameObject>();
 
@@ -164,11 +176,11 @@ public class New_MapManager : MonoBehaviour
         nodeGraph.CreateAdjacencyMatrix();
 
         List<Node> spawnedNodes = nodeGraph.totalNodeList;
-        //TODO figure out if to turn "4" into a const up top to avoid magic numbers
+
         //? Think about integrating this section with "initCell" as that will remove a for loop
         //? Can't currently, as an adjacency matrix needs to be created before rooms can be setup
         // N/E/S/W
-        int[] occupiedCardinalDirections = new int[4];
+        int[] occupiedCardinalDirections = new int[ROOM_EXIT_DIRECTIONS];
         for (int i = 0; i < spawnedNodes.Count; i++)
         {
             Array.Clear(occupiedCardinalDirections, 0, occupiedCardinalDirections.Length);
@@ -177,8 +189,6 @@ public class New_MapManager : MonoBehaviour
 
         CheckGrammars();
 
-        //TODO feature spreading by looping through featureOriginNodes
-        //TODO move this to its own function
         // Loops through all the stored nodes that have possible features to be spread to nearby rooms
         //Debug.Log("Origin Nodes Count: " + featureOriginNodes.Count);
         for (int i = 0; i < featureOriginNodes.Count; i++)
@@ -195,7 +205,6 @@ public class New_MapManager : MonoBehaviour
         //Debug.Log("Total Generation Attempts: " + generationAttempts);
     }
 
-    //! Currently, due to how grammars are applied, additional rooms can appear twice, once where they are meant to, and once where they are not
     private void BuildRoom()
     {
         List<Node> spawnedNodes = nodeGraph.totalNodeList;
@@ -208,13 +217,10 @@ public class New_MapManager : MonoBehaviour
             int cellPosX = spawnedNodes[i].gridPos.y;
 
             (int, GameObject) basicRoomData = spawnedNodes[i].basicRoomData;
-            Vector3 roomPhysicalPosition = new Vector3(cellPosX * (cellSize * 30), 0, -cellPosY * (cellSize * 30));
+            Vector3 roomPhysicalPosition = new Vector3(cellPosX * nodeSize, 0, -cellPosY * nodeSize);
             //Debug.Log("Node ID: " + spawnedNodes[i].id + " --- Rotation amount = " + basicRoomData.Item1);
             Quaternion roomRotation = Quaternion.Euler(0, basicRoomData.Item1, 0);
             
-
-            //TODO move this Instantiation til a later point so all room features are instantiated at the same time?
-            //TODO if I do this, store the instantiation data in the node, as otherwise the physical position and rotation will be lost after this current loop
             GameObject newRoom = Instantiate(basicRoomData.Item2, roomPhysicalPosition, roomRotation);
 
             GameObject newRoomTypeContent = Instantiate(spawnedNodes[i].roomType.baseRoomPrefab, roomPhysicalPosition, roomRotation);
@@ -267,7 +273,6 @@ public class New_MapManager : MonoBehaviour
 
         Node newNode = nodeGraph.AddNode(newCellPos);
 
-        //! Maybe stop the initial node from getting here? Though it shouldn't anyway
         if (!(previousNode == null))
         {
             Debug.Log("newCellPos: " + newCellPos.ToString() + " --- previousNodeID: " + previousNode.id + " --- newNodeID: " + newNode.id + " --- expansionDirection: " + (int)expansionDirection);
@@ -288,7 +293,6 @@ public class New_MapManager : MonoBehaviour
         Vector2 position = new Vector2(newNode.gridPos.x * cellSize, -newNode.gridPos.y * cellSize);
         GameObject newRoomObj = Instantiate(newRoom, position, Quaternion.identity);
 
-        //TODO remove this text section once debugging is finished
         TMP_Text cellText = newRoomObj.gameObject.transform.GetChild(0).GetComponent<TMP_Text>();
         cellText.SetText("ID: " + newNode.id);
 
@@ -364,7 +368,6 @@ public class New_MapManager : MonoBehaviour
             if (!visitedNodes.Contains(visitingNode) && !visitingNode.relevantRoomPrefabs.Contains(roomFeature.featurePrefab))
             {
                 visitedNodes.Add(visitingNode);
-                //TODO have chance of spawning feature in that node
                 // Generate a percentage value
                 int prefabSpawnChance = UnityEngine.Random.Range(0, 100);
                 //Debug.Log("prefab spawn chance: " + roomFeature.linkChance + " --- " + "rolled chance: " + prefabSpawnChance);
@@ -376,7 +379,7 @@ public class New_MapManager : MonoBehaviour
                     for (int j = 0; j < nodeNeighbours.Count; j++)
                     {
                         //TODO figure out if theres a more efficient way of doing this
-                        //TODO this is caused by there being  both a connection from one node to another, and one in the opposite direction. This is currently used to figure out where doors need to be
+                        //TODO this is caused by there being  both a connection from one node to another, and one in the opposite direction. The dual connection is being used to figure out where doors need to be
                         if (!visitedNodes.Contains(nodeNeighbours[j].child))
                         {
                             //Debug.Log("Child Node ID: " + nodeNeighbours[j].child.id);
@@ -403,9 +406,7 @@ public class New_MapManager : MonoBehaviour
     // This could allow easy integration with lock and key puzzles, or for making it more likely to create altered/unique rooms further from the entrance
     private void CheckGrammars()
     {
-        //TODO RETURN LIST OF NODES TO RE SET UP DUE TO GRAMMAR CHANGES?
         // Depth first search of graph to get all possible connections that exist in the graph
-        // Whilst doing this, add connection types to a dictionary of (SO_RoomType,SO_RoomType) key to (Node, Node) value
 
         List<Node> visitedNodes = new List<Node>();
         Stack<Node> nextToVisit = new Stack<Node>();
@@ -418,9 +419,7 @@ public class New_MapManager : MonoBehaviour
         while (nextToVisit.Count > 0)
         {
             Node visitingNode = nextToVisit.Pop();
-            //Debug.Log("Popped Visiting Node: " + visitingNode.id);
 
-            //! using the connections may break, as connections back to it from the child are also stored
             List<Connection> nodeNeighbours = visitingNode.connections;
 
             if (visitedNodes.Contains(visitingNode) == false)
@@ -436,28 +435,10 @@ public class New_MapManager : MonoBehaviour
 
                 for (int i = 0; i < nodeNeighbours.Count; i++)
                 {
-                    //TODO either loop through all graph grammars here to check which one is linked.
-
-                    // // The first element is the current node, so that shouldn't be removed, 
-                    // // but the child of the node changes as we loop, so the rest of the list should be cleared
-                    // // Remove range is used to allow multiple children to be stored which could be expanded upon in the future
-                    // // Currently though, the setup of this DFS would only really allow grammars with two elements
-                    // nodePattern.RemoveRange(1, nodePattern.Count - 1);
-                    // // Add the id of the roomtype of the child to the nodePattern to compare to the grammars
-                    // nodePattern.Add(nodeNeighbours[i].child.roomType.tagID);
-
-                    // //! Sorting it screwed with the Remove range above! Maybe can create a new List that is sorted
-                    // nodePattern.Sort();
-
-                    // List<int> sortedNodePattern = new List<int>();
-                    // sortedNodePattern.AddRange(nodePattern);
-                    // sortedNodePattern.Sort();
 
                     nodePattern.Clear();
                     nodePattern.Add(visitingNode.roomType.tagID);
                     nodePattern.Add(nodeNeighbours[i].child.roomType.tagID);
-                    
-                    //? testing to see if removing this fixes duplication issues
                     //nodePattern.Sort();
 
                     // List<Node> nodeReferenceList = new List<Node>() {visitingNode, nodeNeighbours[i].child};
@@ -465,31 +446,17 @@ public class New_MapManager : MonoBehaviour
                     // for (int d = 0; d < nodePattern.Count; d++) { nodePatternString += nodePattern[d] + "."; }
                     // Debug.Log(nodePatternString);
 
-                    //SO_GraphGrammar foundGrammar = null;
-
                     List<SO_GraphGrammar> potentialGrammars;
-                    // Search for the smallest tagID value found from the nodes in the pattern
-                    // For tagIDs 4,2,1,6, it will try find the tagID 1 in the dict, then check if the remaining values are correct
-                    Debug.Log("Trying to get value: " + nodePattern[0]);
+
                     if (allGrammars.patternGrammarLink.TryGetValue(nodePattern[0], out potentialGrammars))
                     {
                         Debug.Log("Got the value from the dict --- potentialGrammars.Count: " + potentialGrammars.Count);
-                        // // Starts at 1 as we know the first value is correct, as it's what we used as the value in the dict as a lookup
-                        // for (int j = 1; j < relevantGrammar.relevantGrammarPattern.Count; j++)
-                        // {
-                        //     if (relevantGrammar.relevantGrammarPattern[j] == nodePattern[j])
-                        //     {
 
-                        //     }
-                        // }
-                        // Debug.Log("Found Related Grammar");
                         for (int j = 0; j < potentialGrammars.Count; j++)
                         {
-                            //TODO remove debug log lines
                             Debug.Log("Node IDs: 1:" + visitingNode.id + " --- 2: " + nodeNeighbours[i].child.id);
 
-                            Debug.Log("Grammar ID Counts: " + potentialGrammars[j].relevantGrammarPatternIDs.Count);
-                            string grammarIdString = "Grammar ID String: ";
+                            string grammarIdString = "Grammar roomID Counts: " + potentialGrammars[j].relevantGrammarPatternIDs.Count + " Grammar ID String: ";
                             for (int d = 0; d < potentialGrammars[j].relevantGrammarPatternIDs.Count; d++)
                             {
                                 grammarIdString += potentialGrammars[j].relevantGrammarPatternIDs[d] + ", ";
@@ -503,15 +470,12 @@ public class New_MapManager : MonoBehaviour
                             // if the pattern given by the nodes is equal to one of the patterns stored
                             if (nodePattern.SequenceEqual(potentialGrammars[j].relevantGrammarPatternIDs))
                             {
-                                //applicableGrammar = potentialGrammars[j];
-                                //TODO work on checking whether to replace existing node (and which node to replace), or adding a new node
-                                //visitingNode.roomType = potentialGrammars[j].resultantRoomType;
+                                Debug.Log("Found the grammar!" + " Visiting Node ID: " + visitingNode.id);
 
-                                Debug.Log("Visiting Node ID: " + visitingNode.id);
                                 List<Node> nodeList = new List<Node>() { visitingNode, nodeNeighbours[i].child };
                                 ApplyGrammar(nodeList, potentialGrammars[j]);
-                                Debug.Log("Found the grammar!");
-                                break;
+
+                                // The for loop continues, as the checked node could be involved in another grammar.
                             }
                         }
 
@@ -587,7 +551,6 @@ public class New_MapManager : MonoBehaviour
 
                         else { Debug.LogError(" If the code has made it here, it somehow has less than 4 neighbours but none in any cardinal direction... somehow "); }
                         Debug.Log(i + " -------------------------------------");
-                        //TODO figure out how the node that is added to is chosen, currently just picks the first node in the list
 
                         Debug.Log(i + "Parent ID for new node: " + nodeReferenceList[i].id + " ------ And it's cell pos: " + newCellPos.ToString());
 

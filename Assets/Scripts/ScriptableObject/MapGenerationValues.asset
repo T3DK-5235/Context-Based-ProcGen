@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 84bb7ab90d0ae104abaaba0ea5e907cc, type: 3}
   m_Name: MapGenerationValues
   m_EditorClassIdentifier: 
-  gridSizeX: 10
-  gridSizeY: 10
-  minCellCount: 16
-  maxCellCount: 24
-  initialCellX: 5
-  initialCellY: 6
-  basicDeadEnd: {fileID: 919132149155446097, guid: 376d52eb912278540abe9a8465976857, type: 3}
-  basicCorner: {fileID: 919132149155446097, guid: 419921e859889364f8168652d0ebe9f6, type: 3}
-  basicHallway: {fileID: 919132149155446097, guid: 0fdc087a1e5366b46b86da162e745bbf, type: 3}
-  basicTJunction: {fileID: 919132149155446097, guid: 99ff20e0441b72b4d9193ed32e118e6f, type: 3}
-  basicCrossJunction: {fileID: 919132149155446097, guid: 8c8210ca8f9fdfb4fa9f12eaa8930526, type: 3}
+  _gridSizeX: 10
+  _gridSizeY: 10
+  _minNodeCount: 16
+  _maxNodeCount: 24
+  _initialCellX: 5
+  _initialCellY: 6
+  _cellSize: 0.5
+  _nodeSize: 12
+  basicDeadEnd: {fileID: 4543808025137090650, guid: 8458e1e9d0f14854ba2ea35c53cb7c7d, type: 3}
+  basicCorner: {fileID: 4230387780549009850, guid: 8ac4b027e35168c4e920207e443e85e4, type: 3}
+  basicHallway: {fileID: 556603892134966217, guid: 11b93e30c59f9f246b09bdbe3d180a50, type: 3}
+  basicTJunction: {fileID: 2747751451603283011, guid: 41fa7e5318425284395d11fd451a201a, type: 3}
+  basicCrossJunction: {fileID: 1118325216729586227, guid: 87015e47852a103419b904e0a5c67864, type: 3}
   totalRoomTypes: []

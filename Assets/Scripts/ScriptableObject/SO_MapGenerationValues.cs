@@ -5,16 +5,20 @@ using System.Collections.Generic;
 public class SO_MapGenerationValues : ScriptableObject
 {
     [Header("Grid Size")]
-    [SerializeField] public int gridSizeX;
-    [SerializeField] public int gridSizeY;
+    [SerializeField] public int _gridSizeX = 10;
+    [SerializeField] public int _gridSizeY = 10;
 
     [Header("Cell Count")]
-    [SerializeField] public int minCellCount;
-    [SerializeField] public int maxCellCount;
+    [SerializeField] public int _minNodeCount = 16;
+    [SerializeField] public int _maxNodeCount = 24;
 
     [Header("Initial Cell Location")]
-    [SerializeField] public int initialCellX;
-    [SerializeField] public int initialCellY;
+    [SerializeField] public int _initialCellX = 5;
+    [SerializeField] public int _initialCellY = 6;
+
+    [Header("Prefab spacing")]
+    [SerializeField] public float _cellSize = 0.5f;
+    [SerializeField] public float _nodeSize = 0.5f;
 
     [Header("Basic Room Types")]
     [SerializeField] public GameObject basicDeadEnd;
@@ -25,7 +29,4 @@ public class SO_MapGenerationValues : ScriptableObject
 
     [Header("Room Prefabs and Layout")]
     [SerializeField] List<SO_RoomType> totalRoomTypes;
-    // [SerializeField] public SO_RoomTypeContainer roomTypeStorage;
-    // [SerializeField] public SO_RoomVisualTypes roomContextTypeStorage;
-    // [SerializeField] public SO_RoomGameplayTypes roomVisualTypeStorage;
 }
