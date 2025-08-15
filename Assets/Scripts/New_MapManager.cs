@@ -126,19 +126,19 @@ public class New_MapManager : MonoBehaviour
             //! east and west, and north and south *should* technically be swapped, as -1 actually goes up, back through the array
             if (previousCellPos.x > 1)
             {
-                created |= VisitCell(new Vector2Int(previousCellPos.x - 1, previousCellPos.y), previousNode, E_CardinalDirections.EAST);
+                created |= VisitCell(new Vector2Int(previousCellPos.x - 1, previousCellPos.y), previousNode, E_CardinalDirections.WEST);
             }
             if (previousCellPos.x < 8)
             {
-                created |= VisitCell(new Vector2Int(previousCellPos.x + 1, previousCellPos.y), previousNode, E_CardinalDirections.WEST);
+                created |= VisitCell(new Vector2Int(previousCellPos.x + 1, previousCellPos.y), previousNode, E_CardinalDirections.EAST);
             }
             if (previousCellPos.y > 2)
             {
-                created |= VisitCell(new Vector2Int(previousCellPos.x, previousCellPos.y - 1), previousNode, E_CardinalDirections.SOUTH);
+                created |= VisitCell(new Vector2Int(previousCellPos.x, previousCellPos.y - 1), previousNode, E_CardinalDirections.NORTH);
             }
             if (previousCellPos.y < 7)
             {
-                created |= VisitCell(new Vector2Int(previousCellPos.x, previousCellPos.y + 1), previousNode, E_CardinalDirections.NORTH);
+                created |= VisitCell(new Vector2Int(previousCellPos.x, previousCellPos.y + 1), previousNode, E_CardinalDirections.SOUTH);
             }
 
             // if a new cell is not created, add the existing index to the endrooms list
@@ -150,7 +150,7 @@ public class New_MapManager : MonoBehaviour
         }
 
         // Not enough rooms
-        Debug.Log("mapArrayCount: " + mapArrayCount);
+        Debug.Log("mapArrayCount: " + mapArrayCount + "====================================================================================================================================================================================================================================================================================================================");
         if (mapArrayCount < minNodes)
         {
             SetupMap();
@@ -159,7 +159,7 @@ public class New_MapManager : MonoBehaviour
             return;
         }
 
-        Debug.Log("Finished Initial Physical Map Gen");
+        //Debug.Log("Finished Initial Physical Map Gen");
         //Debug.Log("End Room Number: " + endRooms.Count);
         nodeGraph.CreateAdjacencyMatrix();
 
@@ -180,7 +180,7 @@ public class New_MapManager : MonoBehaviour
         //TODO feature spreading by looping through featureOriginNodes
         //TODO move this to its own function
         // Loops through all the stored nodes that have possible features to be spread to nearby rooms
-        Debug.Log("Origin Nodes Count: " + featureOriginNodes.Count);
+        //Debug.Log("Origin Nodes Count: " + featureOriginNodes.Count);
         for (int i = 0; i < featureOriginNodes.Count; i++)
         {
             List<SO_RoomFeature> featureList = featureOriginNodes[i].roomType.featurePrefabs;
@@ -192,25 +192,26 @@ public class New_MapManager : MonoBehaviour
 
         BuildRoom();
 
-        Debug.Log("Total Generation Attempts: " + generationAttempts);
+        //Debug.Log("Total Generation Attempts: " + generationAttempts);
     }
 
     //! Currently, due to how grammars are applied, additional rooms can appear twice, once where they are meant to, and once where they are not
     private void BuildRoom()
     {
         List<Node> spawnedNodes = nodeGraph.totalNodeList;
-        Debug.Log("Now building rooms. There are " + spawnedNodes.Count + " Nodes to spawn");
+        //Debug.Log("Now building rooms. There are " + spawnedNodes.Count + " Nodes to spawn");
 
         for (int i = 0; i < spawnedNodes.Count; i++)
         {
             Node nodeToBuild = spawnedNodes[i];
-            int cellPosX = spawnedNodes[i].gridPos.x;
-            int cellPosY = spawnedNodes[i].gridPos.y;
+            int cellPosY = spawnedNodes[i].gridPos.x;
+            int cellPosX = spawnedNodes[i].gridPos.y;
 
             (int, GameObject) basicRoomData = spawnedNodes[i].basicRoomData;
             Vector3 roomPhysicalPosition = new Vector3(cellPosX * (cellSize * 30), 0, -cellPosY * (cellSize * 30));
             //Debug.Log("Node ID: " + spawnedNodes[i].id + " --- Rotation amount = " + basicRoomData.Item1);
             Quaternion roomRotation = Quaternion.Euler(0, basicRoomData.Item1, 0);
+            
 
             //TODO move this Instantiation til a later point so all room features are instantiated at the same time?
             //TODO if I do this, store the instantiation data in the node, as otherwise the physical position and rotation will be lost after this current loop
@@ -252,8 +253,8 @@ public class New_MapManager : MonoBehaviour
 
     private bool VisitCell(Vector2Int newCellPos, Node previousNode, E_CardinalDirections expansionDirection, bool additionalGrammarCells = false)
     {
-        Debug.Log("Does it fail here?");
-        
+        Debug.Log("Got here on load");
+     
         // The next check within the if statement is only performed during normal generation and is ignored if the cell is provided by a grammar
         if (!additionalGrammarCells == true)
         {
@@ -266,8 +267,14 @@ public class New_MapManager : MonoBehaviour
 
         Node newNode = nodeGraph.AddNode(newCellPos);
 
+        //! Maybe stop the initial node from getting here? Though it shouldn't anyway
+        if (!(previousNode == null))
+        {
+            Debug.Log("newCellPos: " + newCellPos.ToString() + " --- previousNodeID: " + previousNode.id + " --- newNodeID: " + newNode.id + " --- expansionDirection: " + (int)expansionDirection);
+        }
+        
+
         nodeQueue.Enqueue(newNode);
-        Debug.Log("Or does it fail here?");
         mapArray[newCellPos.x, newCellPos.y] = 1;
         mapArrayCount++;
 
@@ -301,14 +308,13 @@ public class New_MapManager : MonoBehaviour
         int cellPosX = nodeToSetup.gridPos.x;
         int cellPosY = nodeToSetup.gridPos.y;
 
-        //! error here, I think from additional grammar room
         // Check which directions from the node are occupied by another node
         // Also check that those directions are within bounds, as out of bounds cannot be occupied anyway, and not catching this will cause an array bounds error
         // Each statement needs two ifs as checking the second statement in the first if could cause an out of bounds error anyway
-        if (cellPosX - 1 > 0) { if (mapArray[cellPosX - 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.NORTH] = 1; } }
-        if (cellPosX + 1 < gridSizeX) { if (mapArray[cellPosX + 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.SOUTH] = 1; } }
-        if (cellPosY - 1 > 0) { if (mapArray[cellPosX, cellPosY + 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.EAST] = 1; } }
-        if (cellPosY + 1 < gridSizeY) { if (mapArray[cellPosX, cellPosY - 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.WEST] = 1; } }
+        if (cellPosX - 1 > 0) { if (mapArray[cellPosX - 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.WEST] = 1; } }
+        if (cellPosX + 1 < gridSizeX) { if (mapArray[cellPosX + 1, cellPosY] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.EAST] = 1; } }
+        if (cellPosY - 1 < gridSizeY) { if (mapArray[cellPosX, cellPosY - 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.NORTH] = 1; } }
+        if (cellPosY + 1 > 0) { if (mapArray[cellPosX, cellPosY + 1] != 0) { occupiedCardinalDirections[(int)E_CardinalDirections.SOUTH] = 1; } }
 
         nodeToSetup.AddCardinalNeighbourSet(occupiedCardinalDirections);
 
@@ -399,7 +405,7 @@ public class New_MapManager : MonoBehaviour
     {
         //TODO RETURN LIST OF NODES TO RE SET UP DUE TO GRAMMAR CHANGES?
         // Depth first search of graph to get all possible connections that exist in the graph
-        // // Whilst doing this, add connection types to a dictionary of (SO_RoomType,SO_RoomType) key to (Node, Node) value
+        // Whilst doing this, add connection types to a dictionary of (SO_RoomType,SO_RoomType) key to (Node, Node) value
 
         List<Node> visitedNodes = new List<Node>();
         Stack<Node> nextToVisit = new Stack<Node>();
@@ -561,41 +567,56 @@ public class New_MapManager : MonoBehaviour
                         if (mapArray[prevCellPosX - 1, prevCellPosY] == 0) //New node is West of parent
                         {
                             newCellPos.Set(prevCellPosX - 1, prevCellPosY);
-                            expansionDirection = E_CardinalDirections.EAST;
+                            expansionDirection = E_CardinalDirections.WEST;
                         }
                         else if (mapArray[prevCellPosX + 1, prevCellPosY] == 0) // New node is East of parent
                         {
                             newCellPos.Set(prevCellPosX + 1, prevCellPosY);
-                            expansionDirection = E_CardinalDirections.WEST;
-                        }
-                        else if (mapArray[prevCellPosX, prevCellPosY + 1] == 0) // New node is South of parent
-                        {
-                            newCellPos.Set(prevCellPosX, prevCellPosY + 1);
-                            expansionDirection = E_CardinalDirections.NORTH;
+                            expansionDirection = E_CardinalDirections.EAST;
                         }
                         else if (mapArray[prevCellPosX, prevCellPosY - 1] == 0) // New node is North of parent
                         {
                             newCellPos.Set(prevCellPosX, prevCellPosY - 1);
+                            expansionDirection = E_CardinalDirections.NORTH;
+                        }
+                        else if (mapArray[prevCellPosX, prevCellPosY + 1] == 0) // New node is South of parent
+                        {
+                            newCellPos.Set(prevCellPosX, prevCellPosY + 1);
                             expansionDirection = E_CardinalDirections.SOUTH;
                         }
+
                         else { Debug.LogError(" If the code has made it here, it somehow has less than 4 neighbours but none in any cardinal direction... somehow "); }
                         Debug.Log(i + " -------------------------------------");
                         //TODO figure out how the node that is added to is chosen, currently just picks the first node in the list
 
-                        //! currently there is an issue where the visit cells throws an out of array bounds exception, need to check cellPosX and Y are within bounds
                         Debug.Log(i + "Parent ID for new node: " + nodeReferenceList[i].id + " ------ And it's cell pos: " + newCellPos.ToString());
 
                         int initialRotation = nodeReferenceList[i].basicRoomData.Item1;
                         VisitCell(newCellPos, nodeReferenceList[i], expansionDirection, true);
 
-                        if (initialRotation == 270) { initialRotation -= 180; }
-                        if (initialRotation == 90) { initialRotation += 90; }
-                        nodeReferenceList[i].basicRoomData.Item1 = initialRotation + 90;
-
                         //? Currently gets the most recent node (Which the new node will be as it's created just before this)
                         //? This will become more complicated if multiple nodes are created due to a grammar, so will have to check how to handle that.
                         Debug.Log(i + "Checking new node values: Grid Pos:" + nodeGraph.totalNodeList[nodeGraph.totalNodeList.Count - 1].gridPos.ToString() +
                         " --- NodeID: " + nodeGraph.totalNodeList[nodeGraph.totalNodeList.Count - 1].id);
+
+                        string debugString = "Prior to force adding new connection, checking current amount: " + nodeReferenceList[i].connections.Count + " And the actual directions: ";
+                        for (int d = 0; d < nodeReferenceList[i].connections.Count; d++)
+                        {
+                            debugString += nodeReferenceList[i].connections[d].child.id + "<-" + nodeReferenceList[i].connections[d].travelDirection.ToString() + " -----";
+                        }
+                        Debug.Log(debugString);
+
+
+                        //? Due to unity being unable to update the occupied directions array during runtime for some reason, it is instead manually done here by directly
+                        //? altering the node's array from outside the class which does work... for some reason.
+                        E_CardinalDirections inverseDirection;
+                        if ((int)expansionDirection % 2 == 0) { inverseDirection = (E_CardinalDirections)((int)expansionDirection + 1); }
+                        else { inverseDirection = (E_CardinalDirections)((int)expansionDirection - 1); }
+                        nodeReferenceList[i].SetCardinalNeighbourSet((int)inverseDirection);
+
+                        // Connection testConnection = new Connection(nodeReferenceList[i], nodeGraph.totalNodeList[nodeGraph.totalNodeList.Count - 1], expansionDirection);
+                        // nodeReferenceList[i].connections.Add(testConnection);
+                        //Passes 
                         SetupRoom(new int[4], nodeGraph.totalNodeList[nodeGraph.totalNodeList.Count - 1], true, relevantGrammar.resultantRoomType);
 
                         // Re set up parent node, as the number of connections, thus the prefab required, will have changed.

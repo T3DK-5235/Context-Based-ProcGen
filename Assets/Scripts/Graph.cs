@@ -46,6 +46,7 @@ public class Graph
 
     public void AddNodeConnection(Node originNode, Node destinationNode, E_CardinalDirections expansionDirection)
     {
+        // Add to the parent, previous node,  a connection from the previous to the new, with the direction from the previous to the new
         originNode.AddConnection(destinationNode, expansionDirection);
     }
 
