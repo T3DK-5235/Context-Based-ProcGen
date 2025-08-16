@@ -177,8 +177,6 @@ public class New_MapManager : MonoBehaviour
 
         List<Node> spawnedNodes = nodeGraph.totalNodeList;
 
-        //? Think about integrating this section with "initCell" as that will remove a for loop
-        //? Can't currently, as an adjacency matrix needs to be created before rooms can be setup
         // N/E/S/W
         int[] occupiedCardinalDirections = new int[ROOM_EXIT_DIRECTIONS];
         for (int i = 0; i < spawnedNodes.Count; i++)
@@ -187,16 +185,20 @@ public class New_MapManager : MonoBehaviour
             SetupRoom(occupiedCardinalDirections, spawnedNodes[i]);
         }
 
-        CheckGrammars();
-
-        // Loops through all the stored nodes that have possible features to be spread to nearby rooms
-        //Debug.Log("Origin Nodes Count: " + featureOriginNodes.Count);
-        for (int i = 0; i < featureOriginNodes.Count; i++)
+        // This section won't run if simple generation is on
+        if (!mapGenValues._simpleGeneration)
         {
-            List<SO_RoomFeature> featureList = featureOriginNodes[i].roomType.featurePrefabs;
-            for (int j = 0; j < featureList.Count; j++)
+            CheckGrammars();
+
+            // Loops through all the stored nodes that have possible features to be spread to nearby rooms
+            //Debug.Log("Origin Nodes Count: " + featureOriginNodes.Count);
+            for (int i = 0; i < featureOriginNodes.Count; i++)
             {
-                SpreadFeature(featureOriginNodes[i], featureList[j]);
+                List<SO_RoomFeature> featureList = featureOriginNodes[i].roomType.featurePrefabs;
+                for (int j = 0; j < featureList.Count; j++)
+                {
+                    SpreadFeature(featureOriginNodes[i], featureList[j]);
+                }
             }
         }
 
@@ -290,7 +292,7 @@ public class New_MapManager : MonoBehaviour
 
     private void InitRoom(Node newNode, Node previousNode, E_CardinalDirections expansionDirection)
     {
-        Vector2 position = new Vector2(newNode.gridPos.x * cellSize, -newNode.gridPos.y * cellSize);
+        Vector2 position = new Vector2((newNode.gridPos.x * cellSize), (-newNode.gridPos.y * cellSize) - 2);
         GameObject newRoomObj = Instantiate(newRoom, position, Quaternion.identity);
 
         TMP_Text cellText = newRoomObj.gameObject.transform.GetChild(0).GetComponent<TMP_Text>();

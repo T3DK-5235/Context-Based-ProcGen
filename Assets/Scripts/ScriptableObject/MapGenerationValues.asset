@@ -20,6 +20,7 @@ MonoBehaviour:
   _initialCellY: 6
   _cellSize: 0.5
   _nodeSize: 12
+  _simpleGeneration: 0
   basicDeadEnd: {fileID: 4543808025137090650, guid: 8458e1e9d0f14854ba2ea35c53cb7c7d, type: 3}
   basicCorner: {fileID: 4230387780549009850, guid: 8ac4b027e35168c4e920207e443e85e4, type: 3}
   basicHallway: {fileID: 556603892134966217, guid: 11b93e30c59f9f246b09bdbe3d180a50, type: 3}

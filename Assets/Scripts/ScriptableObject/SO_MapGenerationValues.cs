@@ -20,6 +20,9 @@ public class SO_MapGenerationValues : ScriptableObject
     [SerializeField] public float _cellSize = 0.5f;
     [SerializeField] public float _nodeSize = 0.5f;
 
+    [Header("Simple vs GraphGrammar")]
+    [SerializeField] public bool _simpleGeneration = false;
+
     [Header("Basic Room Types")]
     [SerializeField] public GameObject basicDeadEnd;
     [SerializeField] public GameObject basicCorner;
