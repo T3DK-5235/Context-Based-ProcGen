@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5039dfb911f204e41a7581713100a3e4, type: 3}
+  m_Name: SimpleStorage
+  m_EditorClassIdentifier: 
+  roomType: 3
+  tagID: 0
+  roomPriority: 1
+  maxInstances: 1
+  baseRoomPrefab: {fileID: 919132149155446097, guid: 2601ccb83f5cf54428832b4adc36a41e, type: 3}
+  isEndRoom: 0
+  featurePrefabs: []

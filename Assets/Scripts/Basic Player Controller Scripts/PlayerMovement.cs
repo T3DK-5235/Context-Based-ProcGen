@@ -10,6 +10,8 @@ public class PlayerMovement : MonoBehaviour
     float horizontalInput;
     float verticalInput;
 
+    public Transform playerStartPos;
+
     Vector3 moveDirection;
     Rigidbody rb;
 
@@ -33,6 +35,16 @@ public class PlayerMovement : MonoBehaviour
     {
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
+
+        //When the map resets, move the player
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            Debug.Log("Space detected for Player");
+            for (int i = 0; i < this.transform.childCount; i++)
+            {
+                this.transform.GetChild(i).transform.position = playerStartPos.position;
+            }   
+        }
     }
 
     private void PlayerMove()

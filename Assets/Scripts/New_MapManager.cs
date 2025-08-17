@@ -1,11 +1,8 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using System;
-using Unity.VisualScripting;
-using System.ComponentModel.Design;
 
 
 public class New_MapManager : MonoBehaviour
