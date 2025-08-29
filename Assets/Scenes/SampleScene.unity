@@ -175,7 +175,7 @@ Transform:
   m_GameObject: {fileID: 183963964}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.55, z: 0}
+  m_LocalPosition: {x: 0, y: 1.4, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -662,14 +662,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5641978ed48eb9f469783d2bf8b6edea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mapArray: 
-  mapArrayCount: 0
-  minNodes: 0
-  maxNodes: 0
-  endRooms: 
-  cellPrefab: {fileID: 6342505499242003119, guid: 18ffbba3bd664e44db21d2864e26d7b2, type: 3}
-  cellSize: 0
-  spawnedCells: []
 --- !u!4 &1063521411
 Transform:
   m_ObjectHideFlags: 0
@@ -747,6 +739,37 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 585466986}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1622217187
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1622217188}
+  m_Layer: 0
+  m_Name: PlayerSpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1622217188
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1622217187}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 75, y: 3.9969614, z: -60}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1926880705
@@ -934,9 +957,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 064295798fad7554f82c74e12e420e50, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 6
+  moveSpeed: 6.5
   orientation: {fileID: 34276728}
   groundDrag: 7
+  playerStartPos: {fileID: 1622217188}
 --- !u!1001 &1374988665691372877
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1257,3 +1281,4 @@ SceneRoots:
   - {fileID: 6954785211333926708}
   - {fileID: 2023689728}
   - {fileID: 1351554743}
+  - {fileID: 1622217188}

@@ -51,7 +51,6 @@ public class Graph
     // use nullable values to fill in empty squares
     public int?[,] CreateAdjacencyMatrix()
     {
-        //int?[,] adjMatrix = new int?[totalNodeList.Count, totalNodeList.Count];
         adjMatrix = new int?[totalNodeList.Count, totalNodeList.Count];
 
         for (int i = 0; i < totalNodeList.Count; i++)
@@ -71,45 +70,6 @@ public class Graph
                 }
             }
         }
-
-        PrintAdjMatrix(adjMatrix);
-
         return adjMatrix;
-    }
-
-
-    public void PrintAdjMatrix(int?[,] adjMatrix)
-    {
-        int Count = totalNodeList.Count;
-        string topbar = "";
-        for (int i = 0; i < Count; i++)
-        {
-            topbar += (totalNodeList[i].id + "  ");
-        }
-        Debug.Log(topbar);
-
-        for (int i = 0; i < Count; i++)
-        {
-            //Debug.Log((char)('A' + i) + " | [ ");
-            String outputRow = totalNodeList[i].id + " | [ ";
-            for (int j = 0; j < Count; j++)
-            {
-                if (i == j)
-                {
-                    outputRow += ("  &,");
-                }
-                else if (adjMatrix[i, j] == null || adjMatrix[i, j] == 0)
-                {
-                    outputRow += ("  .,");
-                }
-                else
-                {
-                    outputRow += ("  " + adjMatrix[i, j] + ",");
-                }
-
-            }
-            Debug.Log(outputRow + " ]\r\n");
-        }
-        //Debug.Log("\r\n");
     }
 }

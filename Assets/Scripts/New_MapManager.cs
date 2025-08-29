@@ -159,7 +159,6 @@ public class New_MapManager : MonoBehaviour
         }
 
         // Not enough rooms
-        Debug.Log("mapArrayCount: " + mapArrayCount + "====================================================================================================================================================================================================================================================================================================================");
         if (mapArrayCount < minNodes)
         {
             SetupMap();
@@ -168,8 +167,6 @@ public class New_MapManager : MonoBehaviour
             return;
         }
 
-        //Debug.Log("Finished Initial Physical Map Gen");
-        //Debug.Log("End Room Number: " + endRooms.Count);
         nodeGraph.CreateAdjacencyMatrix();
 
         List<Node> spawnedNodes = nodeGraph.totalNodeList;
@@ -188,7 +185,6 @@ public class New_MapManager : MonoBehaviour
             CheckGrammars();
 
             // Loops through all the stored nodes that have possible features to be spread to nearby rooms
-            //Debug.Log("Origin Nodes Count: " + featureOriginNodes.Count);
             for (int i = 0; i < featureOriginNodes.Count; i++)
             {
                 List<SO_RoomFeature> featureList = featureOriginNodes[i].roomType.featurePrefabs;
@@ -200,14 +196,11 @@ public class New_MapManager : MonoBehaviour
         }
 
         BuildRoom();
-
-        //Debug.Log("Total Generation Attempts: " + generationAttempts);
     }
 
     private void BuildRoom()
     {
         List<Node> spawnedNodes = nodeGraph.totalNodeList;
-        //Debug.Log("Now building rooms. There are " + spawnedNodes.Count + " Nodes to spawn");
 
         for (int i = 0; i < spawnedNodes.Count; i++)
         {
@@ -217,7 +210,6 @@ public class New_MapManager : MonoBehaviour
 
             (int, GameObject) basicRoomData = spawnedNodes[i].basicRoomData;
             Vector3 roomPhysicalPosition = new Vector3(cellPosX * nodeSize, 0, -cellPosY * nodeSize);
-            //Debug.Log("Node ID: " + spawnedNodes[i].id + " --- Rotation amount = " + basicRoomData.Item1);
             Quaternion roomRotation = Quaternion.Euler(0, basicRoomData.Item1, 0);
             
             GameObject newRoom = Instantiate(basicRoomData.Item2, roomPhysicalPosition, roomRotation);
@@ -258,7 +250,6 @@ public class New_MapManager : MonoBehaviour
 
     private bool VisitCell(Vector2Int newCellPos, Node previousNode, E_CardinalDirections expansionDirection, bool additionalGrammarCells = false)
     {
-        Debug.Log("Got here on load");
      
         // The next check within the if statement is only performed during normal generation and is ignored if the cell is provided by a grammar
         if (!additionalGrammarCells == true)
@@ -271,12 +262,6 @@ public class New_MapManager : MonoBehaviour
         }
 
         Node newNode = nodeGraph.AddNode(newCellPos);
-
-        if (!(previousNode == null))
-        {
-            Debug.Log("newCellPos: " + newCellPos.ToString() + " --- previousNodeID: " + previousNode.id + " --- newNodeID: " + newNode.id + " --- expansionDirection: " + (int)expansionDirection);
-        }
-        
 
         nodeQueue.Enqueue(newNode);
         mapArray[newCellPos.x, newCellPos.y] = 1;
@@ -360,8 +345,6 @@ public class New_MapManager : MonoBehaviour
             Node visitingNode = nextToVisit.Dequeue();
             List<Connection> nodeNeighbours = visitingNode.connections;
 
-            //Debug.Log("Got here with node ID: " + visitingNode.id);
-
             // If the room hasn't been visited AND the room doesnt already have the prefab 
             //TODO improve bandage fix of preventing same prefab from spawning. Maybe return the visitedNodes and prefab type so it can be reused if needed?
             if (!visitedNodes.Contains(visitingNode) && !visitingNode.relevantRoomPrefabs.Contains(roomFeature.featurePrefab))
@@ -369,35 +352,22 @@ public class New_MapManager : MonoBehaviour
                 visitedNodes.Add(visitingNode);
                 // Generate a percentage value
                 int prefabSpawnChance = UnityEngine.Random.Range(0, 100);
-                //Debug.Log("prefab spawn chance: " + roomFeature.linkChance + " --- " + "rolled chance: " + prefabSpawnChance);
                 if (roomFeature.linkChance >= prefabSpawnChance)
                 {
                     visitingNode.relevantRoomPrefabs.Add(roomFeature.featurePrefab);
 
-                    //Debug.Log("Node ID: " + visitingNode.id + " --- Neighbour Count: " + nodeNeighbours.Count);
                     for (int j = 0; j < nodeNeighbours.Count; j++)
                     {
                         //TODO figure out if theres a more efficient way of doing this
                         //TODO this is caused by there being  both a connection from one node to another, and one in the opposite direction. The dual connection is being used to figure out where doors need to be
                         if (!visitedNodes.Contains(nodeNeighbours[j].child))
                         {
-                            //Debug.Log("Child Node ID: " + nodeNeighbours[j].child.id);
                             nextToVisit.Enqueue(nodeNeighbours[j].child);
                         }
                     }
                 }
             }
         }
-
-        // string remainingNodes = "";
-        // for (int x = 0; x < nextToVisit.Count; x++)
-        // {
-        //     Node nextUp = nextToVisit.Peek();
-        //     remainingNodes += ", " + nextUp.id;
-        //     nextToVisit.Dequeue();
-        // }
-        // Debug.Log("The remaining nodes are: " + remainingNodes);
-
     }
 
 
@@ -440,37 +410,15 @@ public class New_MapManager : MonoBehaviour
                     nodePattern.Add(nodeNeighbours[i].child.roomType.tagID);
                     //nodePattern.Sort();
 
-                    // List<Node> nodeReferenceList = new List<Node>() {visitingNode, nodeNeighbours[i].child};
-                    // string nodePatternString = "NodePattern: ";
-                    // for (int d = 0; d < nodePattern.Count; d++) { nodePatternString += nodePattern[d] + "."; }
-                    // Debug.Log(nodePatternString);
-
                     List<SO_GraphGrammar> potentialGrammars;
 
                     if (allGrammars.patternGrammarLink.TryGetValue(nodePattern[0], out potentialGrammars))
                     {
-                        Debug.Log("Got the value from the dict --- potentialGrammars.Count: " + potentialGrammars.Count);
-
                         for (int j = 0; j < potentialGrammars.Count; j++)
                         {
-                            Debug.Log("Node IDs: 1:" + visitingNode.id + " --- 2: " + nodeNeighbours[i].child.id);
-
-                            string grammarIdString = "Grammar roomID Counts: " + potentialGrammars[j].relevantGrammarPatternIDs.Count + " Grammar ID String: ";
-                            for (int d = 0; d < potentialGrammars[j].relevantGrammarPatternIDs.Count; d++)
-                            {
-                                grammarIdString += potentialGrammars[j].relevantGrammarPatternIDs[d] + ", ";
-                            }
-                            Debug.Log(grammarIdString);
-
-                            string nodePatternStrings = "nodePattern String: ";
-                            for (int d = 0; d < nodePattern.Count; d++) { nodePatternStrings += nodePattern[d] + ", "; }
-                            Debug.Log(nodePatternStrings);
-
                             // if the pattern given by the nodes is equal to one of the patterns stored
                             if (nodePattern.SequenceEqual(potentialGrammars[j].relevantGrammarPatternIDs))
                             {
-                                Debug.Log("Found the grammar!" + " Visiting Node ID: " + visitingNode.id);
-
                                 List<Node> nodeList = new List<Node>() { visitingNode, nodeNeighbours[i].child };
                                 ApplyGrammar(nodeList, potentialGrammars[j]);
 
@@ -495,11 +443,6 @@ public class New_MapManager : MonoBehaviour
         {
             for (int i = 0; i < nodeReferenceList.Count; i++)
             {
-                // Debug.Log("Node initial Type: " + nodeReferenceList[i].roomType.tagID +
-                // "--- Node expected Type: " + relevantGrammar.replaceType.tagID +
-                // " --- Replacement Type: " + relevantGrammar.resultantRoomType.tagID +
-                // "--- NodeReferenceList Size: " + nodeReferenceList.Count);
-
                 if (nodeReferenceList[i].roomType.tagID == relevantGrammar.replaceType.tagID)
                 {
                     nodeReferenceList[i].roomType = relevantGrammar.resultantRoomType;
@@ -521,7 +464,6 @@ public class New_MapManager : MonoBehaviour
                     int neighbourCount = GetNeighbourCount(nodeReferenceList[i].gridPos.x, nodeReferenceList[i].gridPos.y);
                     if (neighbourCount < 4)
                     {
-                        Debug.Log(i + "NodeID: " + nodeReferenceList[i].id + " and it's neighbour count: " + neighbourCount);
                         //TODO improve the way directions for the new room are chosen, currently it just goes N/S/E/W
                         Vector2Int newCellPos = new Vector2Int();
 
@@ -549,25 +491,9 @@ public class New_MapManager : MonoBehaviour
                         }
 
                         else { Debug.LogError(" If the code has made it here, it somehow has less than 4 neighbours but none in any cardinal direction... somehow "); }
-                        Debug.Log(i + " -------------------------------------");
-
-                        Debug.Log(i + "Parent ID for new node: " + nodeReferenceList[i].id + " ------ And it's cell pos: " + newCellPos.ToString());
 
                         int initialRotation = nodeReferenceList[i].basicRoomData.Item1;
                         VisitCell(newCellPos, nodeReferenceList[i], expansionDirection, true);
-
-                        //? Currently gets the most recent node (Which the new node will be as it's created just before this)
-                        //? This will become more complicated if multiple nodes are created due to a grammar, so will have to check how to handle that.
-                        Debug.Log(i + "Checking new node values: Grid Pos:" + nodeGraph.totalNodeList[nodeGraph.totalNodeList.Count - 1].gridPos.ToString() +
-                        " --- NodeID: " + nodeGraph.totalNodeList[nodeGraph.totalNodeList.Count - 1].id);
-
-                        string debugString = "Prior to force adding new connection, checking current amount: " + nodeReferenceList[i].connections.Count + " And the actual directions: ";
-                        for (int d = 0; d < nodeReferenceList[i].connections.Count; d++)
-                        {
-                            debugString += nodeReferenceList[i].connections[d].child.id + "<-" + nodeReferenceList[i].connections[d].travelDirection.ToString() + " -----";
-                        }
-                        Debug.Log(debugString);
-
 
                         //? Due to unity being unable to update the occupied directions array during runtime for some reason, it is instead manually done here by directly
                         //? altering the node's array from outside the class which does work... for some reason.
